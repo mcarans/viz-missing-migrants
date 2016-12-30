@@ -1,0 +1,98 @@
+.dc-chart g.row text {
+    fill: black;
+    font-size:0.8em;
+}
+
+.dc-chart .pie-slice {
+    fill:black;
+}
+
+.x-axis-label{
+    font-size:0.8em;
+}
+
+.dc-chart g.selected path {
+    stroke-width:1px !important;
+}
+
+/*.container {
+    min-width:1000px;
+}*/
+
+#map{
+    height:440px;
+    width:100%;
+}
+#map > svg{
+    border: 1px solid #CCC;
+}
+#map > svg path{
+    fill: #CCDDEE;
+    stroke: #FFF;
+}
+
+.hdx-3w-info{
+    padding:5px;
+    background-color:white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    font-size:2em;
+ }
+
+#time .x.axis text {
+    text-anchor: end !important;
+    transform: rotate(-45deg);
+}
+
+#timeplay {
+    margin-right:50px;
+}
+
+.d3-tip {
+    padding:5px;
+    background-color:white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    font-size:1em;
+}
+
+h1{
+    color: #fff;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+h4{
+    color: #333;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+h5{
+    font-weight: normal;
+}
+p{
+    font-size: 12px;
+}
+.navbar-default{
+    background-color: #333;
+}
+.navbar-nav{
+    margin-top: 8px;
+}
+.navbar-nav > li{
+    margin-left: 8px;
+}
+.number-display {
+    color: #c61d23;
+    font-size: 24px;
+    font-weight: 700;
+}
+#total{
+    margin-top: 50px;
+    text-align: center;
+}

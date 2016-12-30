@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <title>Missing Migrants</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+        <link rel="stylesheet" type="text/css" href="css/site.css"/>
+        <link rel="stylesheet" type="text/css" href="css/introjs.css"/>
+        <script src="js/jquery.js"></script>
+        <script src="js/d3.min.js"></script>
+        <script src="js/crossfilter.v1.min.js"></script>
+        <script src="js/dc.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/d3.tip.min.js"></script>
+        <script src="js/intro.js"></script>
+        <script src="data/routes_geom.js"></script>
+        <script src="//d3js.org/topojson.v1.min.js"></script>
+        <script type="text/javascript">
+            // var _gaq = _gaq || [];
+            // _gaq.push(['_setAccount', 'UA-46399763-1']);
+            // _gaq.push(['_trackPageview']);
+
+            // (function() {
+            //      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            //      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            //      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            // })();
+        </script>                 
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+                  <a class="navbar-brand" href="#"><h1>Missing Migrants</h1></a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                  <ul class="nav navbar-nav navbar-right">
+                    <li><button id="intro" class="btn btn-default">Help</button>  </li>
+                    <li><button id="clearfilters" class="btn btn-default">Reset Dashboard</button></li>
+                  </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div class="container">
+            <div id="total" class="row">
+                <div class="col-md-12">
+                    <h5><span id="number"></span> missing/dead</h5>
+                    <p id="selectedFilters"></p>
+                    <!-- <p>A dashboard to explore data regarding the European Refugee Crisis and the migration routes used.  The graphs and maps can be clicked and interacted with to filter the data.  Click the Animate button to watch the migration routes change over time.  For extra help click the help button to the right.  The data was kindly provided by <a href="http://frontex.europa.eu/" target="_blank">Frontex</a>. For more information contact: <a href="https://twitter.com/Simon_B_Johnson">@simon_b_johnson</a>.  This visualisation has been designed for desktop and may not work on mobile.</p> -->
+                </div>
+            </div>            
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="row">
+                        <div id="time" class="col-md-12 col-xs-12">                            
+                            <h4>Time</h4>
+                            <p class="pull-left">Current filter: <span class="filter"></span></p><button id="timeplay" class="btn btn-default pull-right">Animate graph</button>
+                        </div>                      
+                    </div>
+                    <div class="row">
+                        <div id="map" class="col-md-12">
+                           <!-- <h4>Map</h4> -->
+                        </div>                     
+                    </div>    
+                </div>                
+                <div class="col-md-3">
+                    <div class="row">
+                        <div id="regionIncident" class="col-md-12 col-xs-12">
+                            <h4>Region of Incident</h4>
+                            <p>Current filter: <span class="filter"></span></p>
+                        </div>
+                        <div id="regionOrigin" class="col-md-12 col-xs-12">
+                            <h4>Region of Origin</h4>
+                            <p>Current filter: <span class="filter"></span></p>
+                        </div>
+                        <div id="cause" class="col-md-12 col-xs-12">
+                            <h4>Cause</h4>
+                            <p>Current filter: <span class="filter"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="row">
+                <div class="xs-col-12">
+                    <p>Source: FRAN data as of 17 August 2015</p>
+
+                    <p>* This designation is without prejudice to positions on status, and is in line with UNSCR 1244 and the ICJ Opinion on the Kosovo* declaration of independence.</p>
+                </div>
+            </div>  -->                                    
+        </div>
+        <div id="modal" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div id="loading" class="modal-body">
+                        <h2>Loading</h2>
+                    </div>
+                </div>
+            </div>
+        </div>                      
+        <script src="js/site.js"></script> 
+    </body>
+</html>

@@ -26,7 +26,7 @@ function generateDashboard(data){
     var originDimension = cf.dimension(function(d){return checkData(d['#affected+regionorigin'])});
     var causeDimension = cf.dimension(function(d){return checkData(d['#affected+cause+killed'])});
 
-    var timeGroup = timeDimension.group(function(d) {return new Date(d.getFullYear(),d.getMonth());}).reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing'])});
+    var timeGroup = timeDimension.group(function(d) {return d3.time.month(d);}).reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing'])});
     var incidentGroup = incidentDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
     var originGroup = originDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
     var causeGroup = causeDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
@@ -38,17 +38,14 @@ function generateDashboard(data){
     timeChart = dc.barChart('#time').height(215).width($('#time').width())
         .dimension(timeDimension)
         .group(timeGroup)
-        // .x(d3.scale.ordinal())
-        // .xUnits(dc.units.ordinal)
         .x(d3.time.scale().domain([minDate, maxDate]))
         .xUnits(d3.time.months)
         .renderHorizontalGridLines(true)
-        .centerBar(true) 
         .elasticY(true)
         .margins({top: 10, right: 0, bottom: 65, left: 40});
 
     timeChart.yAxis().ticks(3);
-    var xAxis = timeChart.xAxis().tickFormat(d3.time. format('%b %Y'));
+    var xAxis = timeChart.xAxis().tickFormat(d3.time.format('%b %Y'));
 
     timeChart.renderlet(function(chart){
         selectedFilters();
@@ -168,13 +165,14 @@ function selectedFilters(){
     }
 
     //format selected filter data
+    var formatDate = d3.time.format("%m/%d/%Y");
     var str = (filterArray.length>0) ? 'For ' : '';
     for (var i=0; i<filterArray.length; i++){
         var filters = '';
         if (filterArray[i].chart=='#time'){
             var fromDate = new Date(filterArray[i].filters[0][0]);
             var toDate = new Date(filterArray[i].filters[0][1]);
-            filters = '<span>'+(fromDate.getMonth()+1)+'/'+fromDate.getDate()+'/'+fromDate.getFullYear()+' – '+(toDate.getMonth()+1)+'/'+toDate.getDate()+'/'+toDate.getFullYear()+'</span>';
+            filters = '<span>'+formatDate(fromDate)+' – '+formatDate(toDate)+'</span>';
         }
         else{
             $.each(filterArray[i].filters, function( j, val ){
@@ -191,41 +189,25 @@ function checkData(d){
     return (d=='' || d=='Unknown') ? 'No Data' : d;
 }
 
-// function dateByQuarter(d){
-//     var date = new Date(d);
-//     var month = date.getMonth();
-//     var year = date.getFullYear();
-//     if (month <= 2) {
-//         return year+' Q1';
-//     } else if (month > 2 && month <= 5) {
-//         return year+' Q2';
-//     } else if (month > 5 && month <= 8) {
-//         return year+' Q3';
-//     } else {
-//         return year+' Q4';
-//     }
-// }  
-
+var start, end, next;
 function autoAdvance(){
-    // var start = new Date(minDate.getFullYear(), minDate.getMonth()+1);
-    // var end = new Date(maxDate.getFullYear(), maxDate.getMonth()+1);
-    if(time==25){
-        timeChart.filter([quarters[time-1]]);
-        dc.redrawAll();
-        time+=1;
-        clearInterval(timer);
-    }    
-    if(time<25 && time>0){
-        timeChart.filter([quarters[time-1]]);
-        timeChart.filter([quarters[time]]);
-        dc.redrawAll();
+    if (time==0){
+        start = d3.time.month(minDate);
+        end = d3.time.month(maxDate);
+        next = new Date(start);
         time+=1;
     }
-    if(time==0){
-        timeChart.filter([quarters[time]]);
-        dc.redrawAll();
-        time+=1;
-    }    
+    else{
+        start.setMonth(start.getMonth()+1);
+        if (next.getTime()>=end.getTime()){
+            clearInterval(timer);
+        }
+    }
+
+    next.setMonth(next.getMonth()+1);
+    timeChart.filter(null);
+    timeChart.filter(dc.filters.RangedFilter(start, next));
+    dc.redrawAll();
 } 
 
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];

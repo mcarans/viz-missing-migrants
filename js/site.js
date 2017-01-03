@@ -254,6 +254,7 @@ $('#timeplay').on('click',function(){
 });
 
 $('#clearfilters').on('click',function(){
+    clearInterval(timer);
     dc.filterAll();
     dc.redrawAll();
 });

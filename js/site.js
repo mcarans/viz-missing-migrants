@@ -18,6 +18,11 @@ function hxlProxyToJSON(input){
 function generateDashboard(data){
     cf = crossfilter(data);
 
+    data.forEach(function(d){
+        d['#affected+killed'] = checkIntData(d['#affected+killed']);
+        d['#affected+missing'] = checkIntData(d['#affected+missing']);
+    });
+
     var timeDimension = cf.dimension(function(d){return new Date(d['#date+reported']);});
     minDate = new Date(timeDimension.bottom(1)[0]['#date+reported']);
     maxDate = new Date(timeDimension.top(1)[0]['#date+reported']);
@@ -30,7 +35,7 @@ function generateDashboard(data){
     var incidentGroup = incidentDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
     var originGroup = originDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
     var causeGroup = causeDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
-    var totalGroup = cf.groupAll().reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing'])});
+    var totalGroup = cf.groupAll().reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing']);});
 
     var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.data.key+': '+d3.format('0,000')(d.data.value); });
     var rowtip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.key+': '+d3.format('0,000')(d.value); });    
@@ -187,6 +192,10 @@ function selectedFilters(){
 
 function checkData(d){
     return (d=='' || d=='Unknown') ? 'No Data' : d;
+}
+
+function checkIntData(d){
+    return (isNaN(parseInt(d))) ? 0 : parseInt(d);
 }
 
 var start, end, next;

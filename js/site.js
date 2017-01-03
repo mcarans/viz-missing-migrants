@@ -19,77 +19,78 @@ function generateDashboard(data){
     cf = crossfilter(data);
 
     var timeDimension = cf.dimension(function(d){return new Date(d['#date+reported']);});
-    var minDate = new Date(timeDimension.bottom(1)[0]['#date+reported']);
-    var maxDate = new Date(timeDimension.top(1)[0]['#date+reported']);
+    minDate = new Date(timeDimension.bottom(1)[0]['#date+reported']);
+    maxDate = new Date(timeDimension.top(1)[0]['#date+reported']);
 
-    var incidentDimension = cf.dimension(function(d){return d['#affected+regionincident']});
-    var originDimension = cf.dimension(function(d){return d['#affected+regionorigin']});
-    var causeDimension = cf.dimension(function(d){return d['#affected+cause+killed']});
+    var incidentDimension = cf.dimension(function(d){return checkData(d['#affected+regionincident'])});
+    var originDimension = cf.dimension(function(d){return checkData(d['#affected+regionorigin'])});
+    var causeDimension = cf.dimension(function(d){return checkData(d['#affected+cause+killed'])});
 
     var timeGroup = timeDimension.group(function(d) {return new Date(d.getFullYear(),d.getMonth());}).reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing'])});
     var incidentGroup = incidentDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
     var originGroup = originDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
     var causeGroup = causeDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
-    // var routeGroup = routeDimension.group().reduceSum(function(d){return d['#x_value']});
     var totalGroup = cf.groupAll().reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing'])});
 
     var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.data.key+': '+d3.format('0,000')(d.data.value); });
-    var rowtip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.key+': '+d3.format('0,000')(d.value); });   
+    var rowtip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.key+': '+d3.format('0,000')(d.value); });    
 
-    timeChart = dc.barChart('#time').height(180).width($('#time').width())
+    timeChart = dc.barChart('#time').height(215).width($('#time').width())
         .dimension(timeDimension)
         .group(timeGroup)
+        // .x(d3.scale.ordinal())
+        // .xUnits(dc.units.ordinal)
         .x(d3.time.scale().domain([minDate, maxDate]))
         .xUnits(d3.time.months)
         .renderHorizontalGridLines(true)
         .centerBar(true) 
         .elasticY(true)
-        .margins({top: 10, right: 50, bottom: 65, left: 50});
+        .margins({top: 10, right: 0, bottom: 65, left: 40});
 
     timeChart.yAxis().ticks(3);
     var xAxis = timeChart.xAxis().tickFormat(d3.time. format('%b %Y'));
 
-    var incidentChart = dc.rowChart('#regionIncident').height(220).width($('#regionIncident').width())
-        .dimension(incidentDimension)
-        .group(incidentGroup)
-        .data(function(group){
-            return group.top(5);
-        })
-        .colors(['#cccccc',color])
-        .colorDomain([0,1])
-        .colorAccessor(function(d, i){return 1;})        
-        .elasticX(true)
-        .margins({top: 10, right: 15, bottom: 40, left: 15});
-
-    incidentChart.xAxis().ticks(3);
-    incidentChart.renderlet(function(chart){
+    timeChart.renderlet(function(chart){
         selectedFilters();
     });
 
-    var originChart = dc.rowChart('#regionOrigin').height(220).width($('#regionOrigin').width())
-        .dimension(originDimension)
-        .group(originGroup)
+    var incidentChart = dc.rowChart('#regionIncident').height(680).width($('#regionIncident').width())
+        .dimension(incidentDimension)
+        .group(incidentGroup)
         .data(function(group){
-            return group.top(5);
+            return group.top(100);
         })
         .colors(['#cccccc',color])
         .colorDomain([0,1])
         .colorAccessor(function(d, i){return 1;})        
         .elasticX(true)
-        .margins({top: 10, right: 15, bottom: 40, left: 15})
+        .margins({top: 10, right: 20, bottom: 40, left: 15})
+        .xAxis().ticks(3);
+
+    var originChart = dc.rowChart('#regionOrigin').height(680).width($('#regionOrigin').width())
+        .dimension(originDimension)
+        .group(originGroup)
+        .data(function(group){
+            return group.top(100);
+        })
+        .colors(['#cccccc',color])
+        .colorDomain([0,1])
+        .colorAccessor(function(d, i){return 1;})        
+        .elasticX(true)
+        .margins({top: 10, right: 20, bottom: 40, left: 15})
         .xAxis().ticks(3);
 
     var causeChart = dc.rowChart('#cause').height(220).width($('#cause').width())
         .dimension(causeDimension)
         .group(causeGroup)
         .data(function(group){
-            return group.top(5);
+            return group.top(6);
         })
         .colors(['#cccccc',color])
         .colorDomain([0,1])
         .colorAccessor(function(d, i){return 1;})        
         .elasticX(true)
-        .margins({top: 10, right: 15, bottom: 40, left: 15})
+        .margins({top: 10, right: 20, bottom: 40, left: 15})
         .xAxis().ticks(3);
 
     var numberMissingDead = dc.numberDisplay("#number")
@@ -110,14 +111,16 @@ function generateDashboard(data){
     d3.selectAll('g.row').on('mouseover', rowtip.show).on('mouseout', rowtip.hide);                
 }
 
-function initMap(geom){
+function initMap(geom){ 
     var geoData = [];
     var allDimension = cf.dimension(function(d){
-        geoData.push([d['#loc+x'], d['#loc+y']]);
+        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: d['#date+reported'], total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
+    var maptip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.region+': '+d3.format('0,000')(d.total); }); 
 
-    var width = $('#map').width()-50,
-    height = $('#map').height();
+    var margin = {top: 20, right: 0, bottom: 20, left: 10};
+    var width = $('#map').width() - margin.right,
+        height = $('#map').height();
 
     var svg = d3.select('#map').append('svg')
         .attr('width', width)
@@ -128,7 +131,9 @@ function initMap(geom){
         .scale(width/6.2)
         .translate([width / 2, height / 1.5]);    
 
-    svg.selectAll('path')
+    var g = svg.append('g');
+
+    g.selectAll('path')
       .data(geom.features)
       .enter().append('path')
       .attr('d', d3.geo.path().projection(projection))
@@ -137,46 +142,73 @@ function initMap(geom){
         return 'country'+d.properties.ISO_A3;
       });
 
-    svg.selectAll('circle')
+    g.selectAll('circle')
         .data(geoData).enter()
         .append('circle')
-        .attr('cx', function (d) { return projection(d)[0]; })
-        .attr('cy', function (d) { return projection(d)[1]; })
-        .attr('r', '3px')
+        .attr('cx', function (d) { return projection(d.loc)[0]; })
+        .attr('cy', function (d) { return projection(d.loc)[1]; })
+        .attr('r', '2px')
         .attr('fill', 'rgba(0,119,190,0.5)')
-        //.attr('stroke', '#333');
+      .on('mouseover', maptip.show)
+      .on('mouseout', maptip.hide);
+
+    var zoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', function() {
+        g.attr('transform', 'translate(' + d3.event.translate.join(',') + ') scale(' + d3.event.scale + ')');
+    });
+    svg.call(zoom);
+
+    svg.call(maptip);
 }
 
 function selectedFilters(){
-    var str = '';
+    //get selected filter data
+    var filterArray = [];
     for (var chart of dc.chartRegistry.list()){ 
-        //console.log(chart.anchor(), chart.filters())
-        str += 'For time period x, incident region y, region of origin z, cause w';
+        if (chart.filters().length>0) filterArray.push({chart: chart.anchor(), chartTag:$(chart.anchor()).attr('data-tag'), filters: chart.filters()});
     }
-    //$('#selectedFilters')
+
+    //format selected filter data
+    var str = (filterArray.length>0) ? 'For ' : '';
+    for (var i=0; i<filterArray.length; i++){
+        var filters = '';
+        if (filterArray[i].chart=='#time'){
+            var fromDate = new Date(filterArray[i].filters[0][0]);
+            var toDate = new Date(filterArray[i].filters[0][1]);
+            filters = '<span>'+(fromDate.getMonth()+1)+'/'+fromDate.getDate()+'/'+fromDate.getFullYear()+' – '+(toDate.getMonth()+1)+'/'+toDate.getDate()+'/'+toDate.getFullYear()+'</span>';
+        }
+        else{
+            $.each(filterArray[i].filters, function( j, val ){
+              filters += (j==filterArray[i].filters.length-1) ? '<span>'+val+'</span>' : '<span>'+val+'</span>, ';
+            }); 
+        }
+        var strEnd = (i==filterArray.length-1) ? '' : ', ';
+        if (filters!='') str += filterArray[i].chartTag+' '+filters + strEnd;
+    }
+    $('#selectedFilters').html(str);
 }
 
-function dateByQuarter(d){
-    var date = new Date(d);
-    var month = date.getMonth();
-    var year = date.getFullYear();
-    if (month <= 2) {
-        return year+' Q1';
-    } else if (month > 2 && month <= 5) {
-        return year+' Q2';
-    } else if (month > 5 && month <= 8) {
-        return year+' Q3';
-    } else {
-        return year+' Q4';
-    }
+function checkData(d){
+    return (d=='' || d=='Unknown') ? 'No Data' : d;
 }
 
-function zoomToGeom(geom){
-    var bounds = d3.geo.bounds(geom);
-    map.fitBounds([[bounds[0][1],bounds[0][0]],[bounds[1][1],bounds[1][0]]]);
-}   
+// function dateByQuarter(d){
+//     var date = new Date(d);
+//     var month = date.getMonth();
+//     var year = date.getFullYear();
+//     if (month <= 2) {
+//         return year+' Q1';
+//     } else if (month > 2 && month <= 5) {
+//         return year+' Q2';
+//     } else if (month > 5 && month <= 8) {
+//         return year+' Q3';
+//     } else {
+//         return year+' Q4';
+//     }
+// }  
 
 function autoAdvance(){
+    // var start = new Date(minDate.getFullYear(), minDate.getMonth()+1);
+    // var end = new Date(maxDate.getFullYear(), maxDate.getMonth()+1);
     if(time==25){
         timeChart.filter([quarters[time-1]]);
         dc.redrawAll();
@@ -196,39 +228,17 @@ function autoAdvance(){
     }    
 } 
 
-function dataReplace(data){
-    var routeReplace = [
-        'Western Balkan Route',
-        'Black sea Route',
-        'Central Mediterranean Route',
-        'Circular Route from Albania to Greece',
-        'Eastern borders Route',
-        'Eastern Mediterranean Route',
-        'Western African Route',
-        'Western Mediterranean Route'
-    ];
-
-    data.forEach(function(d,i){
-        if(i>0){
-            d[0]=routeReplace[d[0]];
-        }
-    })
-    return data;
-}
-
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
-
 var color = '#1f77b4';
-
 var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
 var geomurl = 'data/worldmap.json';
 
-var time;
-var timer;
-var timeChart;
-var cf;
-
-//var quarters = ['2014 Q1','2014 Q2','2014 Q3','2014 Q4','2015 Q1','2015 Q2','2015 Q3','2015 Q4','2016 Q1','2016 Q2','2016 Q3','2016 Q4'];
+var time,
+    timer,
+    timeChart,
+    cf,
+    minDate,
+    maxDate;
 
 $('#modal').modal('show');
 
@@ -251,16 +261,19 @@ $.when(
     $('#modal').modal('hide'); 
 });
 
+//reload page on window resize to reset svg dimensions
+$(window).resize(function(){
+    location.reload();
+});
 
 $('#timeplay').on('click',function(){
-    time =0;
+    time = 0;
     timer = setInterval(function(){autoAdvance()}, 2000);
 });
 
 $('#clearfilters').on('click',function(){
     dc.filterAll();
     dc.redrawAll();
-   // zoomToGeom(routes_geom);
 });
 
 $('#intro').click(function(){
@@ -280,23 +293,23 @@ $('#intro').click(function(){
               {
                 element: '#cause',
                 intro: "This graph shows the cause of migrant death.  A cause or multiple causes can be clicked to filter the dashboard.",
-                position: 'left'
               },
               {
                 element: '#time',
-                intro: "Here we can see the number of people missing or dead by quarter by year.  Click a bar or multiple bars to see data for that quarter.  The animate button can be used to progress time automatically.  You could, for example, click Mediterranean as region of incident and then click animate to see how Mediterranean migrants have been affected over time.",
+                intro: "Here we can see the number of people missing or dead by month.  Click a bar or multiple bars to see data for that time period.  The animate button can be used to progress time automatically.  You could, for example, click Mediterranean as region of incident and then click animate to see how Mediterranean migrants have been affected over time.",
               },
               {
                 element: '#map',
-                intro: "The map can zoomed and panned.  Click a migration route to filter the dashboard for that route.",
+                intro: "The map can be zoomed with the mousewheel or by double-clicking and panned by dragging.  Hover over a marker to see more information about migrant deaths in that location.",
               },
               {
                 element: '#total',
-                intro: "This number is the total number of missing and dead migrants that match the selected filters on the graphs and map.",
+                intro: "This number is the total number of missing or dead migrants that match the selected filters on the graphs and map.",
               },
               {
               element: '#clearfilters',
                 intro: "Click here at anytime to reset the dashboard.",
+                position: 'right'
               },                           
             ]
         });  

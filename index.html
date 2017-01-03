@@ -14,7 +14,6 @@
         <script src="js/bootstrap.min.js"></script>
         <script src="js/d3.tip.min.js"></script>
         <script src="js/intro.js"></script>
-        <script src="data/routes_geom.js"></script>
         <script src="//d3js.org/topojson.v1.min.js"></script>
         <script type="text/javascript">
             // var _gaq = _gaq || [];
@@ -33,7 +32,7 @@
             <div class="container">
                 <!-- Brand and toggle get grouped for better mobile display -->
                 <div class="navbar-header">
-                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
@@ -43,7 +42,7 @@
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <div class="collapse navbar-collapse">
                   <ul class="nav navbar-nav navbar-right">
                     <li><button id="intro" class="btn btn-default">Help</button>  </li>
                     <li><button id="clearfilters" class="btn btn-default">Reset Dashboard</button></li>
@@ -56,37 +55,39 @@
                 <div class="col-md-12">
                     <h5><span id="number"></span> missing/dead</h5>
                     <p id="selectedFilters"></p>
-                    <!-- <p>A dashboard to explore data regarding the European Refugee Crisis and the migration routes used.  The graphs and maps can be clicked and interacted with to filter the data.  Click the Animate button to watch the migration routes change over time.  For extra help click the help button to the right.  The data was kindly provided by <a href="http://frontex.europa.eu/" target="_blank">Frontex</a>. For more information contact: <a href="https://twitter.com/Simon_B_Johnson">@simon_b_johnson</a>.  This visualisation has been designed for desktop and may not work on mobile.</p> -->
                 </div>
             </div>            
             <div class="row">
-                <div class="col-md-9">
+                <div class="col-md-8 col-xs-12">
                     <div class="row">
-                        <div id="time" class="col-md-12 col-xs-12">                            
-                            <h4>Time</h4>
-                            <p class="pull-left">Current filter: <span class="filter"></span></p><button id="timeplay" class="btn btn-default pull-right">Animate graph</button>
-                        </div>                      
+                        <div class="col-md-8 col-xs-12">
+                            <div id="time" data-tag="time period">                            
+                                <h4>Time</h4>
+                                <p class="pull-left">Current filter: <span class="filter"></span></p><button id="timeplay" class="btn btn-default pull-right">Animate graph</button>
+                            </div>  
+                        </div>    
+                        <div class="col-md-4 col-xs-12">                          
+                            <div id="cause" data-tag="cause">
+                                <h4>Cause</h4>
+                                <p>Current filter: <span class="filter"></span></p>
+                            </div>
+                        </div>                
                     </div>
                     <div class="row">
                         <div id="map" class="col-md-12">
-                           <!-- <h4>Map</h4> -->
                         </div>                     
                     </div>    
                 </div>                
-                <div class="col-md-3">
-                    <div class="row">
-                        <div id="regionIncident" class="col-md-12 col-xs-12">
-                            <h4>Region of Incident</h4>
-                            <p>Current filter: <span class="filter"></span></p>
-                        </div>
-                        <div id="regionOrigin" class="col-md-12 col-xs-12">
-                            <h4>Region of Origin</h4>
-                            <p>Current filter: <span class="filter"></span></p>
-                        </div>
-                        <div id="cause" class="col-md-12 col-xs-12">
-                            <h4>Cause</h4>
-                            <p>Current filter: <span class="filter"></span></p>
-                        </div>
+                <div class="col-md-2 col-xs-12">
+                    <div id="regionIncident" data-tag="incident region">
+                        <h4>Region of Incident</h4>
+                        <p>Current filter: <span class="filter"></span></p>
+                    </div>
+                </div>             
+                <div class="col-md-2 col-xs-12">
+                    <div id="regionOrigin" data-tag="region of origin">
+                        <h4>Region of Origin</h4>
+                        <p>Current filter: <span class="filter"></span></p>
                     </div>
                 </div>
             </div>

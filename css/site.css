@@ -18,10 +18,16 @@
 /*.container {
     min-width:1000px;
 }*/
-
+#time,
+#cause,
+#regionIncident,
+#regionOrigin{
+    width: 100%;
+}
 #map{
     height:440px;
     width:100%;
+    margin-bottom: 20px;
 }
 #map > svg{
     border: 1px solid #CCC;
@@ -46,7 +52,7 @@
 }
 
 #timeplay {
-    margin-right:50px;
+    /*margin-right:50px;*/
 }
 
 .d3-tip {
@@ -85,14 +91,38 @@ p{
     margin-top: 8px;
 }
 .navbar-nav > li{
-    margin-left: 8px;
+    margin: 7px 0 7px 14px;
 }
 .number-display {
     color: #c61d23;
     font-size: 24px;
     font-weight: 700;
+    margin-right: 4px;
 }
 #total{
-    margin-top: 50px;
+    margin-top: 70px;
+    min-height: 75px;
     text-align: center;
+}
+#loading{
+    text-align: center;
+}
+#selectedFilters{
+    margin: 0 auto 10px;
+    width: 70%;
+}
+#selectedFilters > span{
+    font-weight: 700;
+}
+
+@media only screen and (max-width: 768px) {
+    div.introjs-tooltip{
+        right: 10px !important;
+    }
+}
+
+@media only screen and (max-width: 414px) {
+    #map{
+        height: 200px;
+    }
 }

@@ -15,9 +15,6 @@
     stroke-width:1px !important;
 }
 
-/*.container {
-    min-width:1000px;
-}*/
 #time,
 #cause,
 #regionIncident,
@@ -28,6 +25,7 @@
     height:440px;
     width:100%;
     margin-bottom: 20px;
+    position: relative;
 }
 #map > svg{
     border: 1px solid #CCC;
@@ -51,10 +49,6 @@
     transform: rotate(-45deg);
 }
 
-#timeplay {
-    /*margin-right:50px;*/
-}
-
 .d3-tip {
     padding:5px;
     background-color:white;
@@ -62,6 +56,12 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     font-size:1em;
+}
+.map-tip{
+  position: absolute;
+}
+.hidden { 
+  display: none; 
 }
 
 h1{
@@ -91,7 +91,10 @@ p{
     margin-top: 8px;
 }
 .navbar-nav > li{
-    margin: 7px 0 7px 14px;
+    margin: 0 0 7px 14px;
+}
+.navbar{
+    margin-bottom: 10px;
 }
 .number-display {
     color: #c61d23;
@@ -100,7 +103,6 @@ p{
     margin-right: 4px;
 }
 #total{
-    margin-top: 70px;
     min-height: 75px;
     text-align: center;
 }

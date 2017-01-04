@@ -21,20 +21,23 @@ function generateDashboard(data){
     data.forEach(function(d){
         d['#affected+killed'] = checkIntData(d['#affected+killed']);
         d['#affected+missing'] = checkIntData(d['#affected+missing']);
+        d['#affected+regionincident'] = checkData(d['#affected+regionincident']);
+        d['#affected+regionorigin'] = checkData(d['#affected+regionorigin']);
+        d['#affected+cause+killed'] = checkData(d['#affected+cause+killed']);
     });
 
     var timeDimension = cf.dimension(function(d){return new Date(d['#date+reported']);});
     minDate = new Date(timeDimension.bottom(1)[0]['#date+reported']);
     maxDate = new Date(timeDimension.top(1)[0]['#date+reported']);
 
-    var incidentDimension = cf.dimension(function(d){return checkData(d['#affected+regionincident'])});
-    var originDimension = cf.dimension(function(d){return checkData(d['#affected+regionorigin'])});
-    var causeDimension = cf.dimension(function(d){return checkData(d['#affected+cause+killed'])});
+    var incidentDimension = cf.dimension(function(d){return d['#affected+regionincident'];});
+    var originDimension = cf.dimension(function(d){return d['#affected+regionorigin'];});
+    var causeDimension = cf.dimension(function(d){return d['#affected+cause+killed'];});
 
-    var timeGroup = timeDimension.group(function(d) {return d3.time.month(d);}).reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing'])});
-    var incidentGroup = incidentDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
-    var originGroup = originDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
-    var causeGroup = causeDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing'])});
+    var timeGroup = timeDimension.group(function(d) {return d3.time.month(d);}).reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing']);});
+    var incidentGroup = incidentDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
+    var originGroup = originDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
+    var causeGroup = causeDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
     var totalGroup = cf.groupAll().reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing']);});
 
     var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.data.key+': '+d3.format('0,000')(d.data.value); });
@@ -116,13 +119,19 @@ function generateDashboard(data){
 function initMap(geom){ 
     var geoData = [];
     var allDimension = cf.dimension(function(d){
-        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: d['#date+reported'], total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: new Date(d['#date+reported']), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
-    var maptip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.region+': '+d3.format('0,000')(d.total); }); 
 
     var margin = {top: 20, right: 0, bottom: 20, left: 10};
     var width = $('#map').width() - margin.right,
         height = $('#map').height();
+
+    var totalMin = d3.min(geoData, function(d){ return d.total; });
+    var totalMax = d3.max(geoData, function(d){ return d.total; });
+
+    var rlog = d3.scale.log()
+        .domain([1, totalMax])
+        .range([2, 8]);
 
     var svg = d3.select('#map').append('svg')
         .attr('width', width)
@@ -144,22 +153,33 @@ function initMap(geom){
         return 'country'+d.properties.ISO_A3;
       });
 
-    g.selectAll('circle')
+    var circle = g.selectAll('circle')
         .data(geoData).enter()
         .append('circle')
         .attr('cx', function (d) { return projection(d.loc)[0]; })
         .attr('cy', function (d) { return projection(d.loc)[1]; })
-        .attr('r', '2px')
-        .attr('fill', 'rgba(0,119,190,0.5)')
-      .on('mouseover', maptip.show)
-      .on('mouseout', maptip.hide);
+        .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
+        .attr('fill', 'rgba(0,119,190,0.5)');
 
+    //map tooltips
+    var maptip = d3.select('#map').append('div').attr('class', 'd3-tip map-tip hidden');
+    circle
+        .on('mousemove', function(d,i) {
+            var mouse = d3.mouse(svg.node()).map( function(d) { return parseInt(d); } );
+            maptip
+                .classed('hidden', false)
+                .attr('style', 'left:'+(mouse[0]+20)+'px;top:'+(mouse[1]+20)+'px')
+                .html(formatDate(d.date)+' '+d.region+': '+d3.format('0,000')(d.total))
+        })
+        .on('mouseout',  function(d,i) {
+            maptip.classed('hidden', true)
+        }); 
+
+    //map zoom
     var zoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', function() {
         g.attr('transform', 'translate(' + d3.event.translate.join(',') + ') scale(' + d3.event.scale + ')');
     });
     svg.call(zoom);
-
-    svg.call(maptip);
 }
 
 function selectedFilters(){
@@ -170,7 +190,6 @@ function selectedFilters(){
     }
 
     //format selected filter data
-    var formatDate = d3.time.format("%m/%d/%Y");
     var str = (filterArray.length>0) ? 'For ' : '';
     for (var i=0; i<filterArray.length; i++){
         var filters = '';
@@ -195,7 +214,7 @@ function checkData(d){
 }
 
 function checkIntData(d){
-    return (isNaN(parseInt(d))) ? 0 : parseInt(d);
+    return (isNaN(parseInt(d)) || parseInt(d)<0) ? 0 : parseInt(d);
 }
 
 var start, end, next;
@@ -223,6 +242,7 @@ var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
 var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
 var geomurl = 'data/worldmap.json';
+var formatDate = d3.time.format('%m/%d/%Y');
 
 var time,
     timer,

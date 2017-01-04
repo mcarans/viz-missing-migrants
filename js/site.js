@@ -55,8 +55,9 @@ function generateDashboard(data){
     timeChart.yAxis().ticks(3);
     var xAxis = timeChart.xAxis().tickFormat(d3.time.format('%b %Y'));
 
-    timeChart.renderlet(function(chart){
+    timeChart.on("pretransition", function(chart){
         selectedFilters();
+        updateMap(incidentDimension.top(Infinity));
     });
 
     var incidentChart = dc.rowChart('#regionIncident').height(680).width($('#regionIncident').width())
@@ -126,8 +127,8 @@ function initMap(geom){
     var width = $('#map').width() - margin.right,
         height = $('#map').height();
 
-    var totalMin = d3.min(geoData, function(d){ return d.total; });
-    var totalMax = d3.max(geoData, function(d){ return d.total; });
+    totalMin = d3.min(geoData, function(d){ return d.total; });
+    totalMax = d3.max(geoData, function(d){ return d.total; });
 
     var rlog = d3.scale.log()
         .domain([1, totalMax])
@@ -159,7 +160,8 @@ function initMap(geom){
         .attr('cx', function (d) { return projection(d.loc)[0]; })
         .attr('cy', function (d) { return projection(d.loc)[1]; })
         .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
-        .attr('fill', 'rgba(0,119,190,0.5)');
+        .attr('fill', 'rgba(0,119,190,0.5)')
+        .attr('class','incident');
 
     //map tooltips
     var maptip = d3.select('#map').append('div').attr('class', 'd3-tip map-tip hidden');
@@ -179,8 +181,58 @@ function initMap(geom){
     var zoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', function() {
         g.attr('transform', 'translate(' + d3.event.translate.join(',') + ') scale(' + d3.event.scale + ')');
     });
+
     svg.call(zoom);
+
 }
+
+function updateMap(data){
+    var geoData = [];
+    data.forEach(function(d){
+        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: new Date(d['#date+reported']), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+    });
+    d3.selectAll('.incident').remove();
+
+    var svg = d3.select('#map').select('svg')
+    var g = d3.select('#map').select('svg').select('g');
+
+    var margin = {top: 20, right: 0, bottom: 20, left: 10};
+    var width = $('#map').width() - margin.right,
+        height = $('#map').height();
+
+    var rlog = d3.scale.log()
+        .domain([1, totalMax])
+        .range([2, 8]);
+
+    var projection = d3.geo.mercator()
+        .center([0, 0])
+        .scale(width/6.2)
+        .translate([width / 2, height / 1.5]);    
+
+    var circle = g.selectAll('circle')
+        .data(geoData).enter()
+        .append('circle')
+        .attr('cx', function (d) { return projection(d.loc)[0]; })
+        .attr('cy', function (d) { return projection(d.loc)[1]; })
+        .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
+        .attr('fill', 'rgba(0,119,190,0.5)')
+        .attr('class','incident');
+
+    //map tooltips
+    var maptip = d3.select('.d3-tip');
+
+    circle
+        .on('mousemove', function(d,i) {
+            var mouse = d3.mouse(svg.node()).map( function(d) { return parseInt(d); } );
+            maptip
+                .classed('hidden', false)
+                .attr('style', 'left:'+(mouse[0]+20)+'px;top:'+(mouse[1]+20)+'px')
+                .html(formatDate(d.date)+' '+d.region+': '+d3.format('0,000')(d.total))
+        })
+        .on('mouseout',  function(d,i) {
+            maptip.classed('hidden', true)
+        }); 
+    }
 
 function selectedFilters(){
     //get selected filter data
@@ -249,7 +301,9 @@ var time,
     timeChart,
     cf,
     minDate,
-    maxDate;
+    maxDate,
+    totalMin,
+    totalMax;
 
 $('#modal').modal('show');
 

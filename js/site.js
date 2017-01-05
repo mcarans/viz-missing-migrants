@@ -183,7 +183,6 @@ function initMap(geom){
     });
 
     svg.call(zoom);
-
 }
 
 function updateMap(data){
@@ -272,19 +271,21 @@ function checkIntData(d){
 var start, end, next;
 function autoAdvance(){
     if (time==0){
-        start = d3.time.month(minDate);
-        end = d3.time.month(maxDate);
+        start = d3.time.day(minDate);
+        end = d3.time.day(maxDate);
         next = new Date(start);
         time+=1;
     }
     else{
-        start.setMonth(start.getMonth()+1);
+        start.setDate(start.getDate()+1);
         if (next.getTime()>=end.getTime()){
             clearInterval(timer);
+            isAnimating = false;
+            $('#timeplay').removeClass('disabled');
         }
     }
 
-    next.setMonth(next.getMonth()+1);
+    next.setDate(next.getDate()+1);
     timeChart.filter(null);
     timeChart.filter(dc.filters.RangedFilter(start, next));
     dc.redrawAll();
@@ -295,6 +296,7 @@ var color = '#1f77b4';
 var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
 var geomurl = 'data/worldmap.json';
 var formatDate = d3.time.format('%m/%d/%Y');
+var isAnimating = false;
 
 var time,
     timer,
@@ -326,14 +328,18 @@ $.when(
     $('#modal').modal('hide'); 
 });
 
-//reload page on window resize to reset svg dimensions
-$(window).resize(function(){
+//reload page on window orientation change to reset svg dimensions
+$(window).on('orientationchange',function(){
     location.reload();
 });
 
 $('#timeplay').on('click',function(){
-    time = 0;
-    timer = setInterval(function(){autoAdvance()}, 2000);
+    if (!isAnimating){
+        $(this).addClass('disabled');
+        isAnimating = true;
+        time = 0;
+        timer = setInterval(function(){autoAdvance()}, 500);
+    }
 });
 
 $('#clearfilters').on('click',function(){

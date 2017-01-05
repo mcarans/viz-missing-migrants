@@ -163,6 +163,14 @@ function initMap(geom){
         .attr('fill', 'rgba(0,119,190,0.5)')
         .attr('class','incident');
 
+    circle
+        .attr('fill', '#0077be')
+        .attr('fill-opacity', 0)
+        .transition()
+        .delay( function(d, i){ return 0.5*i; })
+        .duration(400)
+        .attr('fill-opacity', 0.5);
+
     //map tooltips
     var maptip = d3.select('#map').append('div').attr('class', 'd3-tip map-tip hidden');
     circle
@@ -214,8 +222,14 @@ function updateMap(data){
         .attr('cx', function (d) { return projection(d.loc)[0]; })
         .attr('cy', function (d) { return projection(d.loc)[1]; })
         .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
-        .attr('fill', 'rgba(0,119,190,0.5)')
         .attr('class','incident');
+
+    circle
+        .attr('fill', '#0077be')
+        .attr('fill-opacity', 0)
+        .transition()
+        .duration(800)
+        .attr('fill-opacity', 0.5);
 
     //map tooltips
     var maptip = d3.select('.d3-tip');
@@ -231,7 +245,7 @@ function updateMap(data){
         .on('mouseout',  function(d,i) {
             maptip.classed('hidden', true)
         }); 
-    }
+}
 
 function selectedFilters(){
     //get selected filter data
@@ -271,13 +285,13 @@ function checkIntData(d){
 var start, end, next;
 function autoAdvance(){
     if (time==0){
-        start = d3.time.day(minDate);
-        end = d3.time.day(maxDate);
+        start = d3.time.month(minDate);
+        end = d3.time.month(maxDate);
         next = new Date(start);
         time+=1;
     }
     else{
-        start.setDate(start.getDate()+1);
+        start.setMonth(start.getMonth()+1);
         if (next.getTime()>=end.getTime()){
             clearInterval(timer);
             isAnimating = false;
@@ -285,7 +299,7 @@ function autoAdvance(){
         }
     }
 
-    next.setDate(next.getDate()+1);
+    next.setMonth(next.getMonth()+1);
     timeChart.filter(null);
     timeChart.filter(dc.filters.RangedFilter(start, next));
     dc.redrawAll();
@@ -338,7 +352,7 @@ $('#timeplay').on('click',function(){
         $(this).addClass('disabled');
         isAnimating = true;
         time = 0;
-        timer = setInterval(function(){autoAdvance()}, 500);
+        timer = setInterval(function(){autoAdvance()}, 2000);
     }
 });
 

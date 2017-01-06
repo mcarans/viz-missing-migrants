@@ -117,6 +117,7 @@ function generateDashboard(data){
     d3.selectAll('g.row').on('mouseover', rowtip.show).on('mouseout', rowtip.hide);                
 }
 
+var mapsvg, mapzoom;
 function initMap(geom){ 
     var geoData = [];
     var allDimension = cf.dimension(function(d){
@@ -134,7 +135,7 @@ function initMap(geom){
         .domain([1, totalMax])
         .range([2, 8]);
 
-    var svg = d3.select('#map').append('svg')
+    mapsvg = d3.select('#map').append('svg')
         .attr('width', width)
         .attr('height', height);
 
@@ -143,7 +144,7 @@ function initMap(geom){
         .scale(width/6.2)
         .translate([width / 2, height / 1.5]);    
 
-    var g = svg.append('g');
+    var g = mapsvg.append('g');
 
     g.selectAll('path')
       .data(geom.features)
@@ -160,12 +161,11 @@ function initMap(geom){
         .attr('cx', function (d) { return projection(d.loc)[0]; })
         .attr('cy', function (d) { return projection(d.loc)[1]; })
         .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
-        .attr('fill', 'rgba(0,119,190,0.5)')
         .attr('class','incident');
 
     circle
-        .attr('fill', '#0077be')
         .attr('fill-opacity', 0)
+        .attr('fill', '#0077be')
         .transition()
         .delay( function(d, i){ return 0.5*i; })
         .duration(400)
@@ -175,7 +175,7 @@ function initMap(geom){
     var maptip = d3.select('#map').append('div').attr('class', 'd3-tip map-tip hidden');
     circle
         .on('mousemove', function(d,i) {
-            var mouse = d3.mouse(svg.node()).map( function(d) { return parseInt(d); } );
+            var mouse = d3.mouse(mapsvg.node()).map( function(d) { return parseInt(d); } );
             maptip
                 .classed('hidden', false)
                 .attr('style', 'left:'+(mouse[0]+20)+'px;top:'+(mouse[1]+20)+'px')
@@ -186,11 +186,44 @@ function initMap(geom){
         }); 
 
     //map zoom
-    var zoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', function() {
+    mapzoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', function() {
         g.attr('transform', 'translate(' + d3.event.translate.join(',') + ') scale(' + d3.event.scale + ')');
     });
+    mapsvg.call(mapzoom);
 
-    svg.call(zoom);
+
+    //create map legend
+    var threshold = d3.scale.threshold()
+        .domain([2, 4, 6, 8])
+        .range(['1-'+Math.round(totalMax*0.25),
+                Math.round(totalMax*0.25)+'-'+Math.round(totalMax*0.5),
+                Math.round(totalMax*0.5)+'-'+Math.round(totalMax*0.75),
+                Math.round(totalMax*0.75)+'-'+totalMax]);
+
+    var legend = d3.select('#maplegend')
+        .append('ul');
+
+    var keys = legend.selectAll('li')
+        .data(threshold.range())
+        .enter().append('li');
+
+    keys.append('div').append('div')
+        .attr('class', 'marker')
+        .style('height', function(d){
+            var r = threshold.invertExtent(d);
+            return (r[1]*2);
+        })
+        .style('width', function(d){
+            var r = threshold.invertExtent(d);
+            return (r[1]*2);
+        });
+    keys.append('div')
+        .attr('class', 'key')
+        .html(function(d){
+        var r = threshold.invertExtent(d);
+        return (d);
+    });
+    $('#maplegend').show();
 }
 
 function updateMap(data){
@@ -222,14 +255,9 @@ function updateMap(data){
         .attr('cx', function (d) { return projection(d.loc)[0]; })
         .attr('cy', function (d) { return projection(d.loc)[1]; })
         .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
-        .attr('class','incident');
-
-    circle
+        .attr('fill-opacity', 0.5)
         .attr('fill', '#0077be')
-        .attr('fill-opacity', 0)
-        .transition()
-        .duration(800)
-        .attr('fill-opacity', 0.5);
+        .attr('class','incident');
 
     //map tooltips
     var maptip = d3.select('.d3-tip');
@@ -294,9 +322,7 @@ function autoAdvance(){
     else{
         start.setDate(start.getDate()+4);
         if (next.getTime()>=end.getTime()){
-            clearInterval(timer);
-            isAnimating = false;
-            $('#timeplay').removeClass('disabled');
+            resetAnimation(true);
         }
     }
 
@@ -306,15 +332,22 @@ function autoAdvance(){
     dc.redrawAll();
 } 
 
+function resetAnimation(restart){
+    $('#timeplay').html('Animate graph');
+    isAnimating = false;
+    if (restart) time = 0;
+    clearInterval(timer);
+}
+
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
 var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
 var geomurl = 'data/worldmap.json';
 var formatDate = d3.time.format('%m/%d/%Y');
 var isAnimating = false;
+var time = 0;
 
-var time,
-    timer,
+var timer,
     timeChart,
     cf,
     minDate,
@@ -350,17 +383,20 @@ $(window).on('orientationchange',function(){
 
 $('#timeplay').on('click',function(){
     if (!isAnimating){
-        $(this).addClass('disabled');
+        $(this).html('Pause animation');
         isAnimating = true;
-        time = 0;
         timer = setInterval(function(){autoAdvance()}, 250);
+    }
+    else{
+        resetAnimation(false);
     }
 });
 
 $('#clearfilters').on('click',function(){
-    clearInterval(timer);
+    resetAnimation(true);
     dc.filterAll();
     dc.redrawAll();
+    mapsvg.selectAll('g').attr('transform', 'translate(0,0) scale(1)');
 });
 
 $('#intro').click(function(){

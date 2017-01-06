@@ -288,10 +288,11 @@ function autoAdvance(){
         start = d3.time.month(minDate);
         end = d3.time.month(maxDate);
         next = new Date(start);
+        next.setDate(next.getDate()+30);
         time+=1;
     }
     else{
-        start.setMonth(start.getMonth()+1);
+        start.setDate(start.getDate()+4);
         if (next.getTime()>=end.getTime()){
             clearInterval(timer);
             isAnimating = false;
@@ -299,7 +300,7 @@ function autoAdvance(){
         }
     }
 
-    next.setMonth(next.getMonth()+1);
+    next.setDate(next.getDate()+4);
     timeChart.filter(null);
     timeChart.filter(dc.filters.RangedFilter(start, next));
     dc.redrawAll();
@@ -352,7 +353,7 @@ $('#timeplay').on('click',function(){
         $(this).addClass('disabled');
         isAnimating = true;
         time = 0;
-        timer = setInterval(function(){autoAdvance()}, 2000);
+        timer = setInterval(function(){autoAdvance()}, 250);
     }
 });
 

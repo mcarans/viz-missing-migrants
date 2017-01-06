@@ -274,10 +274,11 @@ function autoAdvance(){
         start = d3.time.day(minDate);
         end = d3.time.day(maxDate);
         next = new Date(start);
+        next.setDate(next.getDate()+30);
         time+=1;
     }
     else{
-        start.setDate(start.getDate()+1);
+        start.setDate(start.getDate()+4);
         if (next.getTime()>=end.getTime()){
             clearInterval(timer);
             isAnimating = false;
@@ -285,7 +286,7 @@ function autoAdvance(){
         }
     }
 
-    next.setDate(next.getDate()+1);
+    next.setDate(next.getDate()+4);
     timeChart.filter(null);
     timeChart.filter(dc.filters.RangedFilter(start, next));
     dc.redrawAll();
@@ -338,7 +339,7 @@ $('#timeplay').on('click',function(){
         $(this).addClass('disabled');
         isAnimating = true;
         time = 0;
-        timer = setInterval(function(){autoAdvance()}, 500);
+        timer = setInterval(function(){autoAdvance()}, 250);
     }
 });
 

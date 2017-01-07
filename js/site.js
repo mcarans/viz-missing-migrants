@@ -158,10 +158,11 @@ function initMap(geom){
     var circle = g.selectAll('circle')
         .data(geoData).enter()
         .append('circle')
-        .attr('cx', function (d) { return projection(d.loc)[0]; })
-        .attr('cy', function (d) { return projection(d.loc)[1]; })
+        .attr('class','incident')
         .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
-        .attr('class','incident');
+        .attr("transform", function(d) {
+          return "translate(" + projection([(d.loc)[0], (d.loc)[1]]) + ")";
+        });
 
     circle
         .attr('fill-opacity', 0)
@@ -188,6 +189,12 @@ function initMap(geom){
     //map zoom
     mapzoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', function() {
         g.attr('transform', 'translate(' + d3.event.translate.join(',') + ') scale(' + d3.event.scale + ')');
+
+        g.selectAll('circle')
+            .attr('transform', function(d) {
+              var t = d3.transform(d3.select(this).attr('transform')).translate;
+              return 'translate(' + t[0] +','+ t[1] + ')scale('+1/d3.event.scale+')';
+            });      
     });
     mapsvg.call(mapzoom);
 

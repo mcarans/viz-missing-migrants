@@ -24,11 +24,14 @@ function generateDashboard(data){
         d['#affected+regionincident'] = checkData(d['#affected+regionincident']);
         d['#affected+regionorigin'] = checkData(d['#affected+regionorigin']);
         d['#affected+cause+killed'] = checkData(d['#affected+cause+killed']);
+        if(d['#date+reported']==""){d['#date+reported']='2014/01/01'}
     });
 
-    var timeDimension = cf.dimension(function(d){return new Date(d['#date+reported']);});
-    minDate = new Date(timeDimension.bottom(1)[0]['#date+reported']);
-    maxDate = new Date(timeDimension.top(1)[0]['#date+reported']);
+    var parseDate = d3.time.format("%Y/%m/%d").parse
+
+    var timeDimension = cf.dimension(function(d){return parseDate(d['#date+reported'].substr(0,10));});
+    minDate = d3.min(data,function(d){return parseDate(d['#date+reported'].substr(0,10));});
+    maxDate = d3.max(data,function(d){return parseDate(d['#date+reported'].substr(0,10));});
 
     var incidentDimension = cf.dimension(function(d){return d['#affected+regionincident'];});
     var originDimension = cf.dimension(function(d){return d['#affected+regionorigin'];});

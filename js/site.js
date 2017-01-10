@@ -57,7 +57,7 @@ function generateDashboard(data){
 
     timeChart.on("pretransition", function(chart){
         selectedFilters();
-        updateMap(incidentDimension.top(Infinity));
+        if(mapinit){updateMap(incidentDimension.top(Infinity));}
     });
 
     var incidentChart = dc.rowChart('#regionIncident').height(680).width($('#regionIncident').width())
@@ -118,7 +118,8 @@ function generateDashboard(data){
 }
 
 var mapsvg, mapzoom;
-function initMap(geom){ 
+function initMap(geom){
+    mapinit = true;
     var geoData = [];
     var allDimension = cf.dimension(function(d){
         geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: new Date(d['#date+reported']), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
@@ -191,10 +192,7 @@ function initMap(geom){
         g.attr('transform', 'translate(' + d3.event.translate.join(',') + ') scale(' + d3.event.scale + ')');
 
         g.selectAll('circle')
-            .attr('transform', function(d) {
-              var t = d3.transform(d3.select(this).attr('transform')).translate;
-              return 'translate(' + t[0] +','+ t[1] + ')scale('+1/d3.event.scale+')';
-            });      
+            .attr('r', function (d) { return (d.total==0) ? rlog(1)/mapzoom.scale() : rlog(d.total)/mapzoom.scale(); });
     });
     mapsvg.call(mapzoom);
 
@@ -254,14 +252,14 @@ function updateMap(data){
     var projection = d3.geo.mercator()
         .center([0, 0])
         .scale(width/6.2)
-        .translate([width / 2, height / 1.5]);    
+        .translate([width / (2), height / (1.5)]);    
 
     var circle = g.selectAll('circle')
         .data(geoData).enter()
         .append('circle')
         .attr('cx', function (d) { return projection(d.loc)[0]; })
         .attr('cy', function (d) { return projection(d.loc)[1]; })
-        .attr('r', function (d) { return (d.total==0) ? rlog(1) : rlog(d.total); })
+        .attr('r', function (d) { return (d.total==0) ? rlog(1)/mapzoom.scale() : rlog(d.total)/mapzoom.scale(); })
         .attr('fill-opacity', 0.5)
         .attr('fill', '#0077be')
         .attr('class','incident');
@@ -279,7 +277,8 @@ function updateMap(data){
         })
         .on('mouseout',  function(d,i) {
             maptip.classed('hidden', true)
-        }); 
+        });
+
 }
 
 function selectedFilters(){
@@ -361,6 +360,8 @@ var timer,
     maxDate,
     totalMin,
     totalMax;
+
+var mapinit = false;
 
 $('#modal').modal('show');
 

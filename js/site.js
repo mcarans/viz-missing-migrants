@@ -117,10 +117,13 @@ function generateDashboard(data){
     d3.selectAll('.bar').on('mouseover', tip.show).on('mouseout', tip.hide);
 
     d3.selectAll('g.row').call(rowtip);
-    d3.selectAll('g.row').on('mouseover', rowtip.show).on('mouseout', rowtip.hide);                
+    d3.selectAll('g.row').on('mouseover', rowtip.show).on('mouseout', rowtip.hide);   
+
+    $('#selectedFilters').html('<p id="selectedFilters">For time period <span>'+formatDate(minDate)+' – '+formatDate(maxDate)+'</span></p>');             
 }
 
-var mapsvg, mapzoom;
+var mapsvg, mapzoom, rlog, scaleMin, scaleMax;
+var mapZoomLevel = 1;
 function initMap(geom){
     mapinit = true;
     var geoData = [];
@@ -135,7 +138,7 @@ function initMap(geom){
     totalMin = d3.min(geoData, function(d){ return d.total; });
     totalMax = d3.max(geoData, function(d){ return d.total; });
 
-    var rlog = d3.scale.log()
+    rlog = d3.scale.log()
         .domain([1, totalMax])
         .range([2, 8]);
 
@@ -158,6 +161,15 @@ function initMap(geom){
       .attr('id',function(d){
         return 'country'+d.properties.ISO_A3;
       });
+
+    //print location labels 
+    // g.selectAll('.label')
+    //     .data(geom.features)
+    //     .enter().append('text')
+    //     .attr('class', 'label')
+    //     .attr('transform', function(d) { console.log(d); return 'translate(' + projection(d.geometry.coordinates[0][0]) + ')'; })
+    //     .attr('dy', '.35em')
+    //     .text(function(d) { return d.properties.NAME; });
 
     var circle = g.selectAll('circle')
         .data(geoData).enter()
@@ -191,22 +203,21 @@ function initMap(geom){
         }); 
 
     //map zoom
-    mapzoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', function() {
-        g.attr('transform', 'translate(' + d3.event.translate.join(',') + ') scale(' + d3.event.scale + ')');
-
-        g.selectAll('circle')
-            .attr('r', function (d) { return (d.total==0) ? rlog(1)/mapzoom.scale() : rlog(d.total)/mapzoom.scale(); });
+    scalemin = 1;
+    scalemax = 8;
+    mapzoom = d3.behavior.zoom().scaleExtent([scalemin, scalemax]).on('zoom', function() {
+        mapZoomLevel = d3.event.scale;
+        zoomMap(d3.event.translate.join(','), mapZoomLevel);
     });
     mapsvg.call(mapzoom);
-
 
     //create map legend
     var threshold = d3.scale.threshold()
         .domain([2, 4, 6, 8])
         .range(['1-'+Math.round(totalMax*0.25),
-                Math.round(totalMax*0.25)+'-'+Math.round(totalMax*0.5),
-                Math.round(totalMax*0.5)+'-'+Math.round(totalMax*0.75),
-                Math.round(totalMax*0.75)+'-'+totalMax]);
+                Math.round((totalMax*0.25)+1)+'-'+Math.round(totalMax*0.5),
+                Math.round((totalMax*0.5)+1)+'-'+Math.round(totalMax*0.75),
+                Math.round((totalMax*0.75)+1)+'-'+totalMax]);
 
     var legend = d3.select('#maplegend')
         .append('ul');
@@ -227,11 +238,34 @@ function initMap(geom){
         });
     keys.append('div')
         .attr('class', 'key')
-        .html(function(d){
-        var r = threshold.invertExtent(d);
-        return (d);
-    });
+        .html(function(d){ return d;});
     $('#maplegend').show();
+
+    //create zoom control
+    var zoomIn = d3.select('#map')
+        .append('div')
+        .attr('class', 'zoomin')
+        .html('+');
+
+    var zoomOut = d3.select('#map')
+        .append('div')
+        .attr('class', 'zoomout')
+        .html('–');
+
+    zoomIn.on('click', function(){
+        mapZoomLevel = mapZoomLevel + 0.5;
+        if (mapZoomLevel <= scalemax){
+            var translate =  -(width / 2) + ',' + -(height / 2);
+            zoomMap(translate, mapZoomLevel);
+        }
+    });
+    zoomOut.on('click', function(){
+        mapZoomLevel = mapZoomLevel - 0.5;
+        if (mapZoomLevel >= scalemin){
+            var translate =  -(width / 2) + ',' + -(height / 2);
+            zoomMap(translate, mapZoomLevel);
+        }
+    });
 }
 
 function updateMap(data){
@@ -240,6 +274,8 @@ function updateMap(data){
         geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: new Date(d['#date+reported']), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
     d3.selectAll('.incident').remove();
+
+    totalMax = d3.max(geoData, function(d){ return d.total; });
 
     var svg = d3.select('#map').select('svg')
     var g = d3.select('#map').select('svg').select('g');
@@ -282,6 +318,31 @@ function updateMap(data){
             maptip.classed('hidden', true)
         });
 
+    updateLegend(totalMax);
+}
+
+function updateLegend(max){
+    var keys = $('#maplegend .key');
+    var lowrange = 1;
+    for (var i=0;i<keys.length;i++){
+        var multiplier = (i+1)/keys.length;
+        var highrange = Math.round(max*multiplier);
+        $(keys[i]).html(lowrange + '–' + highrange);
+        lowrange = highrange+1;
+    }
+}
+
+function zoomMap(translate, scale){
+    var g = d3.select('#map').select('svg').select('g');
+    g.attr('transform', 'translate(' + translate + ') scale(' + scale + ')');
+    g.selectAll('circle')
+        .attr('r', function (d) { return (d.total==0) ? rlog(1)/mapzoom.scale() : rlog(d.total)/mapzoom.scale(); });
+    g.selectAll('path').style('stroke-width', (scalemax/mapzoom.scale())/10);
+
+    // var fontlog = d3.scale.log()
+    //     .domain([12, 2])
+    //     .range([1, 8]);
+    // g.selectAll('.label').style('font-size', Math.floor(fontlog(mapzoom.scale()))+'px');
 }
 
 function selectedFilters(){

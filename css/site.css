@@ -3,10 +3,6 @@
     font-size:0.8em;
 }
 
-.dc-chart .pie-slice {
-    fill:black;
-}
-
 .x-axis-label{
     font-size:0.8em;
 }
@@ -21,28 +17,6 @@
 #regionOrigin{
     width: 100%;
 }
-#map{
-    height:440px;
-    width:100%;
-    margin-bottom: 20px;
-    position: relative;
-}
-#map > svg{
-    border: 1px solid #CCC;
-}
-#map > svg path{
-    fill: #CCDDEE;
-    stroke: #FFF;
-}
-
-.hdx-3w-info{
-    padding:5px;
-    background-color:white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    font-size:2em;
- }
 
 #time .x.axis text {
     text-anchor: end !important;
@@ -56,6 +30,44 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     font-size:1em;
+}
+
+#map{
+    height:440px;
+    width:100%;
+    margin-bottom: 20px;
+    position: relative;
+}
+#map > svg{
+    border: 1px solid #CCC;
+}
+#map > svg path{
+    fill: #CCDDEE;
+    stroke: #FFF;
+    stroke-width: 1;
+}
+#map .label{
+    font-size: 12px;
+    font-weight: normal;
+}
+#map .zoomin,
+#map .zoomout{
+    background-color: #FFF;
+    border: 1px solid #CCC;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    bottom: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 700;
+    height: 25px;
+    line-height: 16px;
+    position: absolute;
+    right: 25px;
+    text-align: center;
+    width: 25px;
+}
+#map .zoomin{
+    bottom: 34px;
 }
 .map-tip{
   position: absolute;

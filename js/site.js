@@ -27,7 +27,7 @@ function generateDashboard(data){
         if(d['#date+reported']==""){d['#date+reported']='2014/01/01'}
     });
 
-    var parseDate = d3.time.format("%Y/%m/%d").parse
+    var parseDate = d3.time.format("%Y/%m/%d").parse;
 
     var timeDimension = cf.dimension(function(d){return parseDate(d['#date+reported'].substr(0,10));});
     minDate = d3.min(data,function(d){return parseDate(d['#date+reported'].substr(0,10));});
@@ -126,9 +126,11 @@ var mapsvg, mapzoom, rlog, scaleMin, scaleMax;
 var mapZoomLevel = 1;
 function initMap(geom){
     mapinit = true;
+
+    var parseDate = d3.time.format("%Y/%m/%d").parse;
     var geoData = [];
     var allDimension = cf.dimension(function(d){
-        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: new Date(d['#date+reported']), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
 
     var margin = {top: 20, right: 0, bottom: 20, left: 10};
@@ -270,8 +272,9 @@ function initMap(geom){
 
 function updateMap(data){
     var geoData = [];
+    var parseDate = d3.time.format("%Y/%m/%d").parse;
     data.forEach(function(d){
-        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: new Date(d['#date+reported']), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+        geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
     d3.selectAll('.incident').remove();
 

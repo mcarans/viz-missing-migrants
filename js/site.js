@@ -122,8 +122,7 @@ function generateDashboard(data){
     $('#selectedFilters').html('<p id="selectedFilters">For time period <span>'+formatDate(minDate)+' – '+formatDate(maxDate)+'</span></p>');             
 }
 
-var mapsvg, mapzoom, rlog, scaleMin, scaleMax;
-var mapZoomLevel = 1;
+var mapsvg, mapzoom, rlog;
 function initMap(geom){
     mapinit = true;
 
@@ -139,6 +138,7 @@ function initMap(geom){
 
     totalMin = d3.min(geoData, function(d){ return d.total; });
     totalMax = d3.max(geoData, function(d){ return d.total; });
+    mapzoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', zoomMap);
 
     rlog = d3.scale.log()
         .domain([1, totalMax])
@@ -146,7 +146,8 @@ function initMap(geom){
 
     mapsvg = d3.select('#map').append('svg')
         .attr('width', width)
-        .attr('height', height);
+        .attr('height', height)
+        .call(mapzoom);
 
     var projection = d3.geo.mercator()
         .center([0, 0])
@@ -204,15 +205,6 @@ function initMap(geom){
             maptip.classed('hidden', true)
         }); 
 
-    //map zoom
-    scalemin = 1;
-    scalemax = 8;
-    mapzoom = d3.behavior.zoom().scaleExtent([scalemin, scalemax]).on('zoom', function() {
-        mapZoomLevel = d3.event.scale;
-        zoomMap(d3.event.translate.join(','), mapZoomLevel);
-    });
-    mapsvg.call(mapzoom);
-
     //create map legend
     var threshold = d3.scale.threshold()
         .domain([2, 4, 6, 8])
@@ -246,28 +238,18 @@ function initMap(geom){
     //create zoom control
     var zoomIn = d3.select('#map')
         .append('div')
-        .attr('class', 'zoomin')
+        .attr('class', 'zoomBtn')
+        .attr('id','zoom-in')
         .html('+');
 
     var zoomOut = d3.select('#map')
         .append('div')
-        .attr('class', 'zoomout')
+        .attr('class', 'zoomBtn')
+        .attr('id','zoom-out')
         .html('–');
 
-    zoomIn.on('click', function(){
-        mapZoomLevel = mapZoomLevel + 0.5;
-        if (mapZoomLevel <= scalemax){
-            var translate =  -(width / 2) + ',' + -(height / 2);
-            zoomMap(translate, mapZoomLevel);
-        }
-    });
-    zoomOut.on('click', function(){
-        mapZoomLevel = mapZoomLevel - 0.5;
-        if (mapZoomLevel >= scalemin){
-            var translate =  -(width / 2) + ',' + -(height / 2);
-            zoomMap(translate, mapZoomLevel);
-        }
-    });
+    zoomIn.on('click', zoomClick);
+    zoomOut.on('click', zoomClick);
 }
 
 function updateMap(data){
@@ -335,18 +317,60 @@ function updateLegend(max){
     }
 }
 
-function zoomMap(translate, scale){
+function zoomMap(){
     var g = d3.select('#map').select('svg').select('g');
-    g.attr('transform', 'translate(' + translate + ') scale(' + scale + ')');
+    g.attr('transform', 'translate(' + mapzoom.translate() + ') scale(' + mapzoom.scale() + ')');
     g.selectAll('circle')
         .attr('r', function (d) { return (d.total==0) ? rlog(1)/mapzoom.scale() : rlog(d.total)/mapzoom.scale(); });
-    g.selectAll('path').style('stroke-width', (scalemax/mapzoom.scale())/10);
-
-    // var fontlog = d3.scale.log()
-    //     .domain([12, 2])
-    //     .range([1, 8]);
-    // g.selectAll('.label').style('font-size', Math.floor(fontlog(mapzoom.scale()))+'px');
+    g.selectAll('path').style('stroke-width', (mapzoom.scaleExtent()[1]/mapzoom.scale()) / 10);
 }
+
+function interpolateZoom(translate, scale) {
+    var self = this;
+    return d3.transition().duration(350).tween('zoom', function () {
+        var iTranslate = d3.interpolate(mapzoom.translate(), translate),
+            iScale = d3.interpolate(mapzoom.scale(), scale);
+        return function (t) {
+            mapzoom
+                .scale(iScale(t))
+                .translate(iTranslate(t));
+            zoomMap();
+        };
+    });
+}
+
+function zoomClick() {
+    var clicked = d3.event.target,
+        direction = 1,
+        factor = 0.2,
+        target_zoom = 1,
+        center = [mapsvg.attr('width') / 2, mapsvg.attr('height') / 2],
+        extent = mapzoom.scaleExtent(),
+        translate = mapzoom.translate(),
+        translate0 = [],
+        l = [],
+        view = {x: translate[0], y: translate[1], k: mapzoom.scale()};
+
+    d3.event.preventDefault();
+    direction = (this.id === 'zoom-in') ? 1 : -1;
+    target_zoom = mapzoom.scale() * (1 + factor * direction);
+
+    if (target_zoom < extent[0] || target_zoom > extent[1]) { return false; }
+
+    translate0 = [(center[0] - view.x) / view.k, (center[1] - view.y) / view.k];
+    view.k = target_zoom;
+    l = [translate0[0] * view.k + view.x, translate0[1] * view.k + view.y];
+
+    view.x += center[0] - l[0];
+    view.y += center[1] - l[1];
+
+    interpolateZoom([view.x, view.y], view.k);
+}
+
+// var fontlog = d3.scale.log()
+//     .domain([12, 2])
+//     .range([1, 8]);
+// g.selectAll('.label').style('font-size', Math.floor(fontlog(mapzoom.scale()))+'px');
 
 function selectedFilters(){
     //get selected filter data

@@ -47,6 +47,7 @@
     stroke-width: 1;
 }
 #map .label{
+    fill: #888;
     font-size: 12px;
     font-weight: normal;
 }

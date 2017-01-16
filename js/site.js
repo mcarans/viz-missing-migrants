@@ -122,7 +122,7 @@ function generateDashboard(data){
     $('#selectedFilters').html('<p id="selectedFilters">For time period <span>'+formatDate(minDate)+' – '+formatDate(maxDate)+'</span></p>');             
 }
 
-var mapsvg, mapzoom, rlog;
+var mapsvg, mapzoom, rlog, labellog;
 function initMap(geom){
     mapinit = true;
 
@@ -140,9 +140,15 @@ function initMap(geom){
     totalMax = d3.max(geoData, function(d){ return d.total; });
     mapzoom = d3.behavior.zoom().scaleExtent([1, 8]).on('zoom', zoomMap);
 
+    //create log scale for circle markers
     rlog = d3.scale.log()
         .domain([1, totalMax])
         .range([2, 8]);
+
+    //create log scale for region labels
+    labellog = d3.scale.log()
+        .domain([1, 8])
+        .range([12, 3]);
 
     mapsvg = d3.select('#map').append('svg')
         .attr('width', width)
@@ -165,15 +171,18 @@ function initMap(geom){
         return 'country'+d.properties.ISO_A3;
       });
 
-    //print location labels 
-    // g.selectAll('.label')
-    //     .data(geom.features)
-    //     .enter().append('text')
-    //     .attr('class', 'label')
-    //     .attr('transform', function(d) { console.log(d); return 'translate(' + projection(d.geometry.coordinates[0][0]) + ')'; })
-    //     .attr('dy', '.35em')
-    //     .text(function(d) { return d.properties.NAME; });
+    //create region labels
+    var region = g.selectAll('text')
+        .data(regions).enter()
+        .append('text')
+        .attr('class', 'label')
+        .style('font-size', function (d) { return Math.round(labellog(mapzoom.scale())); })
+        .attr("transform", function(d) {
+          return "translate(" + projection([(d.coordinates)[0], (d.coordinates)[1]]) + ")";
+        })
+        .text(function(d){ return d.region; });
 
+    //create marker locations
     var circle = g.selectAll('circle')
         .data(geoData).enter()
         .append('circle')
@@ -323,6 +332,8 @@ function zoomMap(){
     g.selectAll('circle')
         .attr('r', function (d) { return (d.total==0) ? rlog(1)/mapzoom.scale() : rlog(d.total)/mapzoom.scale(); });
     g.selectAll('path').style('stroke-width', (mapzoom.scaleExtent()[1]/mapzoom.scale()) / 10);
+    g.selectAll('.label')
+        .style('font-size', function(d) { return Math.round(labellog(mapzoom.scale())); })
 }
 
 function interpolateZoom(translate, scale) {
@@ -366,11 +377,6 @@ function zoomClick() {
 
     interpolateZoom([view.x, view.y], view.k);
 }
-
-// var fontlog = d3.scale.log()
-//     .domain([12, 2])
-//     .range([1, 8]);
-// g.selectAll('.label').style('font-size', Math.floor(fontlog(mapzoom.scale()))+'px');
 
 function selectedFilters(){
     //get selected filter data
@@ -440,6 +446,7 @@ var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
 var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
 var geomurl = 'data/worldmap.json';
+var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');
 var isAnimating = false;
 var time = 0;
@@ -456,11 +463,16 @@ var mapinit = false;
 
 $('#modal').modal('show');
 
-var data, geom;
+var data, geom, regions;
 $.when(
     // get data
     $.get(dataurl).done(function(d){
         data = d;
+    }),
+
+    // get regions
+    $.get(regionsurl).done(function(result){
+        regions = result.regions;
     }),
 
     // get geom

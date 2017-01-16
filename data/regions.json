@@ -1,0 +1,15 @@
+{
+	"regions": [
+		{ "region": "Mediterranean", "coordinates": [8.077144236, 36.19101781] },
+		{ "region": "Europe", "coordinates": [4.76827, 47.49113816] },
+		{ "region": "North Africa", "coordinates": [-12.65453814, 28.34864492] },
+		{ "region": "U.S./Mexico Border", "coordinates": [-100.5784354, 28.72698006] },
+		{ "region": "Central America incl. Mexico", "coordinates": [-95.82147286, 18.31999764] },
+		{ "region": "Sub-Saharan Africa", "coordinates": [-13.06887851, -13.06887851] },
+		{ "region": "Middle East", "coordinates": [50.45995927, 35.19929345] },
+		{ "region": "South America", "coordinates": [-77, -10] },
+		{ "region": "Horn of Africa", "coordinates": [41.88270352, 3.925774063] },
+		{ "region": "Southeast Asia", "coordinates": [104.2259996, 1.551297143] },
+		{ "region": "East Asia", "coordinates": [110.7999981, 25.43443772] }
+	]
+}

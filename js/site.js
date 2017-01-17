@@ -128,9 +128,25 @@ function initMap(geom){
 
     var parseDate = d3.time.format("%Y/%m/%d").parse;
     var geoData = [];
+    var regionData = [];
+
     var allDimension = cf.dimension(function(d){
         geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
+
+    //combine region data with counts
+    var regionDimension = cf.dimension(function(d){ return d['#affected+regionincident']; });
+    var regionGroup = regionDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
+    for (var i=0;i<regionGroup.all().length;i++){
+        var coords;
+        for (var j=0;j<regions.length;j++){
+            if (regions[j].region==regionGroup.all()[i].key){
+                coords = regions[j].coordinates;
+                break;
+            }
+        }
+        if (regionGroup.all()[i].key!='No Data') regionData.push({name: regionGroup.all()[i].key, total: regionGroup.all()[i].value, coordinates: coords});
+    }
 
     var margin = {top: 20, right: 0, bottom: 20, left: 10};
     var width = $('#map').width() - margin.right,
@@ -173,14 +189,14 @@ function initMap(geom){
 
     //create region labels
     var region = g.selectAll('text')
-        .data(regions).enter()
+        .data(regionData).enter()
         .append('text')
         .attr('class', 'label')
         .style('font-size', function (d) { return Math.round(labellog(mapzoom.scale())); })
         .attr("transform", function(d) {
           return "translate(" + projection([(d.coordinates)[0], (d.coordinates)[1]]) + ")";
         })
-        .text(function(d){ return d.region; });
+        .text(function(d){ return d.name + ': ' + formatNumber(d.total); });
 
     //create marker locations
     var circle = g.selectAll('circle')
@@ -263,11 +279,27 @@ function initMap(geom){
 
 function updateMap(data){
     var geoData = [];
+    var regionData = [];
     var parseDate = d3.time.format("%Y/%m/%d").parse;
     data.forEach(function(d){
         geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
     d3.selectAll('.incident').remove();
+    d3.selectAll('.label').remove();
+
+    //combine region data with counts
+    var regionDimension = cf.dimension(function(d){ return d['#affected+regionincident']; });
+    var regionGroup = regionDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
+    for (var i=0;i<regionGroup.all().length;i++){
+        var coords;
+        for (var j=0;j<regions.length;j++){
+            if (regions[j].region==regionGroup.all()[i].key){
+                coords = regions[j].coordinates;
+                break;
+            }
+        }
+        if (regionGroup.all()[i].key!='No Data') regionData.push({name: regionGroup.all()[i].key, total: regionGroup.all()[i].value, coordinates: coords});
+    }
 
     totalMax = d3.max(geoData, function(d){ return d.total; });
 
@@ -286,6 +318,17 @@ function updateMap(data){
         .center([0, 0])
         .scale(width/6.2)
         .translate([width / (2), height / (1.5)]);    
+
+    //create region labels
+    var region = g.selectAll('text')
+        .data(regionData).enter()
+        .append('text')
+        .attr('class', 'label')
+        .style('font-size', function (d) { return Math.round(labellog(mapzoom.scale())); })
+        .attr("transform", function(d) {
+          return "translate(" + projection([(d.coordinates)[0], (d.coordinates)[1]]) + ")";
+        })
+        .text(function(d){ return d.name + ': ' + formatNumber(d.total); });
 
     var circle = g.selectAll('circle')
         .data(geoData).enter()
@@ -448,6 +491,7 @@ var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=http
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');
+var formatNumber = d3.format(',');
 var isAnimating = false;
 var time = 0;
 

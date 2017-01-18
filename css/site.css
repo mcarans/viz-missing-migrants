@@ -170,4 +170,7 @@ p{
     #map{
         height: 200px;
     }
+    #map .label{
+        display: none;
+    }
 }

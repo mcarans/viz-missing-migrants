@@ -60,7 +60,7 @@ function generateDashboard(data){
 
     timeChart.on("pretransition", function(chart){
         selectedFilters();
-        if(mapinit){updateMap(incidentDimension.top(Infinity));}
+        if(mapinit){updateMap(incidentDimension);}
     });
 
     var incidentChart = dc.rowChart('#regionIncident').height(680).width($('#regionIncident').width())
@@ -281,15 +281,15 @@ function updateMap(data){
     var geoData = [];
     var regionData = [];
     var parseDate = d3.time.format("%Y/%m/%d").parse;
-    data.forEach(function(d){
+    data.top(Infinity).forEach(function(d){
         geoData.push({loc:[d['#loc+x'], d['#loc+y']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
     d3.selectAll('.incident').remove();
     d3.selectAll('.label').remove();
 
+
     //combine region data with counts
-    var regionDimension = cf.dimension(function(d){ return d['#affected+regionincident']; });
-    var regionGroup = regionDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
+    var regionGroup = data.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
     for (var i=0;i<regionGroup.all().length;i++){
         var coords;
         for (var j=0;j<regions.length;j++){

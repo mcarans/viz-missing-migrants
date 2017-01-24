@@ -140,14 +140,18 @@ p{
     margin-bottom: 10px;
 }
 .number-display {
-    color: #c61d23;
-    font-size: 24px;
+    color: #FAB81C;
+    font-size: 36px;
     font-weight: 700;
     margin-right: 4px;
 }
 #total{
     min-height: 75px;
     text-align: center;
+}
+#total h3{
+    font-size: 21px;
+    margin-top: 10px;
 }
 #loading{
     text-align: center;

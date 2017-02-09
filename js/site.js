@@ -24,14 +24,14 @@ function generateDashboard(data){
         d['#affected+regionincident'] = checkData(d['#affected+regionincident']);
         d['#affected+regionorigin'] = checkData(d['#affected+regionorigin']);
         d['#affected+cause+killed'] = checkData(d['#affected+cause+killed']);
-        if(d['#date+reported']==""){d['#date+reported']='2014/01/01'}
+        d['#geo+lng'] = checkGeoData(d['#geo+lng']);
+        d['#geo+lat'] = checkGeoData(d['#geo+lat']);
+        if(d['#date+reported']=="" || d['#date+reported']=="<Null>"){d['#date+reported']='1/1/2014'}
     });
 
-    var parseDate = d3.time.format("%Y/%m/%d").parse;
-
-    var timeDimension = cf.dimension(function(d){return parseDate(d['#date+reported'].substr(0,10));});
-    minDate = d3.min(data,function(d){return parseDate(d['#date+reported'].substr(0,10));});
-    maxDate = d3.max(data,function(d){return parseDate(d['#date+reported'].substr(0,10));});
+    var timeDimension = cf.dimension(function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
+    minDate = d3.min(data,function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
+    maxDate = d3.max(data,function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
 
     var incidentDimension = cf.dimension(function(d){return d['#affected+regionincident'];});
     var originDimension = cf.dimension(function(d){return d['#affected+regionorigin'];});
@@ -125,8 +125,6 @@ function generateDashboard(data){
 var mapsvg, mapzoom, rlog, labellog;
 function initMap(geom){
     mapinit = true;
-
-    var parseDate = d3.time.format("%Y/%m/%d").parse;
     var geoData = [];
     var regionData = [];
 
@@ -280,7 +278,6 @@ function initMap(geom){
 function updateMap(data){
     var geoData = [];
     var regionData = [];
-    var parseDate = d3.time.format("%Y/%m/%d").parse;
     data.top(Infinity).forEach(function(d){
         geoData.push({loc:[d['#geo+lng'], d['#geo+lat']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
@@ -449,7 +446,11 @@ function selectedFilters(){
 }
 
 function checkData(d){
-    return (d=='' || d=='Unknown') ? 'No Data' : d;
+    return (d=='' || d=='Unknown' || d=='<Null>') ? 'No Data' : d;
+}
+
+function checkGeoData(d){
+    return (d=='' || d=='Unknown' || d=='<Null>') ? 0 : d;
 }
 
 function checkIntData(d){
@@ -487,10 +488,12 @@ function resetAnimation(restart){
 
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
-var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
+var dataurl = 'https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
+//var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');
+var parseDate = d3.time.format("%m/%d/%Y").parse;
 var formatNumber = d3.format(',');
 var isAnimating = false;
 var time = 0;

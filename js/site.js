@@ -131,7 +131,7 @@ function initMap(geom){
     var regionData = [];
 
     var allDimension = cf.dimension(function(d){
-        geoData.push({loc:[d['#geo+lng'], d['#geo+lon']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+        geoData.push({loc:[d['#geo+lng'], d['#geo+lat']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
 
     //combine region data with counts
@@ -282,7 +282,7 @@ function updateMap(data){
     var regionData = [];
     var parseDate = d3.time.format("%Y/%m/%d").parse;
     data.top(Infinity).forEach(function(d){
-        geoData.push({loc:[d['#geo+lng'], d['#geo+lon']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+        geoData.push({loc:[d['#geo+lng'], d['#geo+lat']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
     });
     d3.selectAll('.incident').remove();
     d3.selectAll('.label').remove();

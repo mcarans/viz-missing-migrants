@@ -1,20 +1,11 @@
 function hxlProxyToJSON(input){
     var output = [];
-    var keys=[]
-    console.log(input[0]);
-    for (var i=0;i<input.length;i++){
-        if(i==0){
-            keys = input[i];
-        } else {
-            var row = {};
-            var e = input[i];
-            for (var j=0;j<e.length;j++){
-                row[keys[j]] = e[j];
-            }
-            console.log(row);
-            output.push(row);
-        }
-    }
+    var keys = [];
+    $.each(input, function(i,e) {
+        var row = {};
+        row[keys[i]] = e;
+        output.push(row);
+    });
     // input.forEach(function(e,i){
     //     if (i<3) console.log(e);
     //     if(i==0){
@@ -41,6 +32,7 @@ function generateDashboard(data){
         d['#cause+type'] = checkData(d['#cause+type']);
         d['#geo+lon'] = checkGeoData(d['#geo+lon']);
         d['#geo+lat'] = checkGeoData(d['#geo+lat']);
+        console.log(d['#geo+lon']);
         if(d['#date+reported']=="" || d['#date+reported']=="<Null>"){d['#date+reported']='1/1/2014'}
     });
 

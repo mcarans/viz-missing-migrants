@@ -1,26 +1,3 @@
-function hxlProxyToJSON(input){
-    var output = [];
-    var keys = [];
-    $.each(input, function(i,e) {
-        var row = {};
-        row[keys[i]] = e;
-        output.push(row);
-    });
-    // input.forEach(function(e,i){
-    //     if (i<3) console.log(e);
-    //     if(i==0){
-    //         keys = e;
-    //     } else {
-    //         var row = {};
-    //         e.forEach(function(e2,i2){
-    //             row[keys[i2]] = e2;
-    //         });
-    //         output.push(row);
-    //     }
-    // });
-    return output;
-}
-
 function generateDashboard(data){
     cf = crossfilter(data);
 
@@ -32,13 +9,12 @@ function generateDashboard(data){
         d['#cause+type'] = checkData(d['#cause+type']);
         d['#geo+lon'] = checkGeoData(d['#geo+lon']);
         d['#geo+lat'] = checkGeoData(d['#geo+lat']);
-        console.log(d['#geo+lon']);
-        if(d['#date+reported']=="" || d['#date+reported']=="<Null>"){d['#date+reported']='1/1/2014'}
+        if(d['#date+reported']=="" || d['#date+reported']==null){d['#date+reported']='01/01/2014'}
     });
 
-    var timeDimension = cf.dimension(function(d){console.log(d['#date+reported']);return parseDate(d['#date+reported'].split(' ')[0]);});
-    minDate = d3.min(data,function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
-    maxDate = d3.max(data,function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
+    var timeDimension = cf.dimension(function(d){return parseDate(d['#date+reported']);});
+    minDate = d3.min(data,function(d){return parseDate(d['#date+reported']);});
+    maxDate = d3.max(data,function(d){return parseDate(d['#date+reported']);});
 
     var incidentDimension = cf.dimension(function(d){return d['#region+incident'];});
     var originDimension = cf.dimension(function(d){return d['#region+origin'];});
@@ -453,11 +429,11 @@ function selectedFilters(){
 }
 
 function checkData(d){
-    return (d=='' || d=='Unknown' || d=='<Null>') ? 'No Data' : d;
+    return (d=='' || d=='Unknown' || d==null) ? 'No Data' : d;
 }
 
 function checkGeoData(d){
-    return (d=='' || d=='Unknown' || d=='<Null>') ? 0 : d;
+    return (d=='' || d=='Unknown' || d==null) ? 0 : d;
 }
 
 function checkIntData(d){
@@ -499,7 +475,7 @@ var dataurl = 'http://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJSON';//https://
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');
-var parseDate = d3.time.format("%m/%d/%Y").parse;
+var parseDate = d3.time.format("%d/%m/%Y").parse;
 var formatNumber = d3.format(',');
 var isAnimating = false;
 var time = 0;
@@ -533,7 +509,6 @@ $.when(
         geom = topojson.feature(result,result.objects.geom);
     })
 ).then(function() {
-    data = hxlProxyToJSON(data);
     generateDashboard(data);
     initMap(geom);
     

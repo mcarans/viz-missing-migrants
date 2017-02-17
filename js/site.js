@@ -1,17 +1,32 @@
 function hxlProxyToJSON(input){
     var output = [];
     var keys=[]
-    input.forEach(function(e,i){
+    console.log(input[0]);
+    for (var i=0;i<input.length;i++){
         if(i==0){
-            keys = e;
+            keys = input[i];
         } else {
             var row = {};
-            e.forEach(function(e2,i2){
-                row[keys[i2]] = e2;
-            });
+            var e = input[i];
+            for (var j=0;j<e.length;j++){
+                row[keys[j]] = e[j];
+            }
+            console.log(row);
             output.push(row);
         }
-    });
+    }
+    // input.forEach(function(e,i){
+    //     if (i<3) console.log(e);
+    //     if(i==0){
+    //         keys = e;
+    //     } else {
+    //         var row = {};
+    //         e.forEach(function(e2,i2){
+    //             row[keys[i2]] = e2;
+    //         });
+    //         output.push(row);
+    //     }
+    // });
     return output;
 }
 
@@ -19,29 +34,29 @@ function generateDashboard(data){
     cf = crossfilter(data);
 
     data.forEach(function(d){
-        d['#affected+killed'] = checkIntData(d['#affected+killed']);
+        d['#affected+dead'] = checkIntData(d['#affected+dead']);
         d['#affected+missing'] = checkIntData(d['#affected+missing']);
-        d['#affected+regionincident'] = checkData(d['#affected+regionincident']);
-        d['#affected+regionorigin'] = checkData(d['#affected+regionorigin']);
-        d['#affected+cause+killed'] = checkData(d['#affected+cause+killed']);
-        d['#geo+lng'] = checkGeoData(d['#geo+lng']);
+        d['#region+incident'] = checkData(d['#region+incident']);
+        d['#region+origin'] = checkData(d['#region+origin']);
+        d['#cause+type'] = checkData(d['#cause+type']);
+        d['#geo+lon'] = checkGeoData(d['#geo+lon']);
         d['#geo+lat'] = checkGeoData(d['#geo+lat']);
         if(d['#date+reported']=="" || d['#date+reported']=="<Null>"){d['#date+reported']='1/1/2014'}
     });
 
-    var timeDimension = cf.dimension(function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
+    var timeDimension = cf.dimension(function(d){console.log(d['#date+reported']);return parseDate(d['#date+reported'].split(' ')[0]);});
     minDate = d3.min(data,function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
     maxDate = d3.max(data,function(d){return parseDate(d['#date+reported'].split(' ')[0]);});
 
-    var incidentDimension = cf.dimension(function(d){return d['#affected+regionincident'];});
-    var originDimension = cf.dimension(function(d){return d['#affected+regionorigin'];});
-    var causeDimension = cf.dimension(function(d){return d['#affected+cause+killed'];});
+    var incidentDimension = cf.dimension(function(d){return d['#region+incident'];});
+    var originDimension = cf.dimension(function(d){return d['#region+origin'];});
+    var causeDimension = cf.dimension(function(d){return d['#cause+type'];});
 
-    var timeGroup = timeDimension.group(function(d) {return d3.time.month(d);}).reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing']);});
-    var incidentGroup = incidentDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
-    var originGroup = originDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
-    var causeGroup = causeDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
-    var totalGroup = cf.groupAll().reduceSum(function(d){return (d['#affected+killed'] + d['#affected+missing']);});
+    var timeGroup = timeDimension.group(function(d) {return d3.time.month(d);}).reduceSum(function(d){return (d['#affected+dead'] + d['#affected+missing']);});
+    var incidentGroup = incidentDimension.group().reduceSum(function(d){ return (d['#affected+dead'] + d['#affected+missing']);});
+    var originGroup = originDimension.group().reduceSum(function(d){ return (d['#affected+dead'] + d['#affected+missing']);});
+    var causeGroup = causeDimension.group().reduceSum(function(d){ return (d['#affected+dead'] + d['#affected+missing']);});
+    var totalGroup = cf.groupAll().reduceSum(function(d){return (d['#affected+dead'] + d['#affected+missing']);});
 
     var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.data.key+': '+d3.format('0,000')(d.data.value); });
     var rowtip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.key+': '+d3.format('0,000')(d.value); });    
@@ -104,10 +119,10 @@ function generateDashboard(data){
 
     var numberMissingDead = dc.numberDisplay("#number")
         .valueAccessor(function(d){
-            return d
+            return d;
         })
         .formatNumber(function(d){
-            return d3.format("0,000")(parseInt(d));;
+            return d3.format("0,000")(parseInt(d));
         })           
         .group(totalGroup);        
 
@@ -129,12 +144,12 @@ function initMap(geom){
     var regionData = [];
 
     var allDimension = cf.dimension(function(d){
-        geoData.push({loc:[d['#geo+lng'], d['#geo+lat']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+        geoData.push({loc:[d['#geo+lon'], d['#geo+lat']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+dead'] + d['#affected+missing'], region: d['#region+incident']});
     });
 
     //combine region data with counts
-    var regionDimension = cf.dimension(function(d){ return d['#affected+regionincident']; });
-    var regionGroup = regionDimension.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
+    var regionDimension = cf.dimension(function(d){ return d['#region+incident']; });
+    var regionGroup = regionDimension.group().reduceSum(function(d){ return (d['#affected+dead'] + d['#affected+missing']);});
     for (var i=0;i<regionGroup.all().length;i++){
         var coords;
         for (var j=0;j<regions.length;j++){
@@ -279,14 +294,14 @@ function updateMap(data){
     var geoData = [];
     var regionData = [];
     data.top(Infinity).forEach(function(d){
-        geoData.push({loc:[d['#geo+lng'], d['#geo+lat']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+killed'] + d['#affected+missing'], region: d['#affected+regionincident']});
+        geoData.push({loc:[d['#geo+lon'], d['#geo+lat']], date: parseDate(d['#date+reported'].substr(0,10)), total: d['#affected+dead'] + d['#affected+missing'], region: d['#region+incident']});
     });
     d3.selectAll('.incident').remove();
     d3.selectAll('.label').remove();
 
 
     //combine region data with counts
-    var regionGroup = data.group().reduceSum(function(d){ return (d['#affected+killed'] + d['#affected+missing']);});
+    var regionGroup = data.group().reduceSum(function(d){ return (d['#affected+dead'] + d['#affected+missing']);});
     for (var i=0;i<regionGroup.all().length;i++){
         var coords;
         for (var j=0;j<regions.length;j++){
@@ -488,8 +503,7 @@ function resetAnimation(restart){
 
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
-var dataurl = 'https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
-//var dataurl = 'https://proxy.hxlstandard.org/data.json?strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/16cKC9a1v20ztkhY29h5nIDEPFKWIm6Z97Y4D54TyZr8/edit%3Fusp%3Dsharing';
+var dataurl = 'http://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJSON';//https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');

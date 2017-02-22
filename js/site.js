@@ -1,3 +1,31 @@
+function hxlProxyToJSON(input){
+    var output = [];
+    var keys=[]
+    input.forEach(function(e,i){
+        if(i==0){
+            e.forEach(function(e2,i2){
+                var parts = e2.split('+');
+                var key = parts[0]
+                if(parts.length>1){
+                    var atts = parts.splice(1,parts.length);
+                    atts.sort();                    
+                    atts.forEach(function(att){
+                        key +='+'+att
+                    });
+                }
+                keys.push(key);
+            });
+        } else {
+            var row = {};
+            e.forEach(function(e2,i2){
+                row[keys[i2]] = e2;
+            });
+            output.push(row);
+        }
+    });
+    return output;
+}
+
 function generateDashboard(data){
     cf = crossfilter(data);
 
@@ -471,7 +499,7 @@ function resetAnimation(restart){
 
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
-var dataurl = 'https://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJSON';//https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
+var dataurl = 'http://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJsonMinified';//https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');
@@ -509,7 +537,7 @@ $.when(
         geom = topojson.feature(result,result.objects.geom);
     })
 ).then(function() {
-    generateDashboard(data);
+    generateDashboard(hxlProxyToJSON(data));
     initMap(geom);
     
     $('#modal').modal('hide'); 

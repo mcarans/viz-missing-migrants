@@ -499,7 +499,7 @@ function resetAnimation(restart){
 
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
-var dataurl = 'http://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJsonMinified';//https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
+var dataurl = 'https://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJsonMinified';//https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');

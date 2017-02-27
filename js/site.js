@@ -8,7 +8,7 @@ function hxlProxyToJSON(input){
                 var key = parts[0]
                 if(parts.length>1){
                     var atts = parts.splice(1,parts.length);
-                    atts.sort();
+                    atts.sort();                    
                     atts.forEach(function(att){
                         key +='+'+att
                     });
@@ -55,7 +55,7 @@ function generateDashboard(data){
     var totalGroup = cf.groupAll().reduceSum(function(d){return (d['#affected+dead'] + d['#affected+missing']);});
 
     var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.data.key+': '+d3.format('0,000')(d.data.value); });
-    var rowtip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.key+': '+d3.format('0,000')(d.value); });
+    var rowtip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.key+': '+d3.format('0,000')(d.value); });    
 
     timeChart = dc.barChart('#time').height(215).width($('#time').width())
         .dimension(timeDimension)
@@ -82,7 +82,7 @@ function generateDashboard(data){
         })
         .colors(['#cccccc',color])
         .colorDomain([0,1])
-        .colorAccessor(function(d, i){return 1;})
+        .colorAccessor(function(d, i){return 1;})        
         .elasticX(true)
         .margins({top: 10, right: 20, bottom: 40, left: 15})
         .xAxis().ticks(3);
@@ -95,7 +95,7 @@ function generateDashboard(data){
         })
         .colors(['#cccccc',color])
         .colorDomain([0,1])
-        .colorAccessor(function(d, i){return 1;})
+        .colorAccessor(function(d, i){return 1;})        
         .elasticX(true)
         .margins({top: 10, right: 20, bottom: 40, left: 15})
         .xAxis().ticks(3);
@@ -108,7 +108,7 @@ function generateDashboard(data){
         })
         .colors(['#cccccc',color])
         .colorDomain([0,1])
-        .colorAccessor(function(d, i){return 1;})
+        .colorAccessor(function(d, i){return 1;})        
         .elasticX(true)
         .margins({top: 10, right: 20, bottom: 40, left: 15})
         .xAxis().ticks(3);
@@ -119,8 +119,8 @@ function generateDashboard(data){
         })
         .formatNumber(function(d){
             return d3.format("0,000")(parseInt(d));
-        })
-        .group(totalGroup);
+        })           
+        .group(totalGroup);        
 
     dc.renderAll();
 
@@ -128,9 +128,9 @@ function generateDashboard(data){
     d3.selectAll('.bar').on('mouseover', tip.show).on('mouseout', tip.hide);
 
     d3.selectAll('g.row').call(rowtip);
-    d3.selectAll('g.row').on('mouseover', rowtip.show).on('mouseout', rowtip.hide);
+    d3.selectAll('g.row').on('mouseover', rowtip.show).on('mouseout', rowtip.hide);   
 
-    $('#selectedFilters').html('<p id="selectedFilters">For time period <span>'+formatDate(minDate)+' – '+formatDate(maxDate)+'</span></p>');
+    $('#selectedFilters').html('<p id="selectedFilters">For time period <span>'+formatDate(minDate)+' – '+formatDate(maxDate)+'</span></p>');             
 }
 
 var mapsvg, mapzoom, rlog, labellog;
@@ -183,7 +183,7 @@ function initMap(geom){
     var projection = d3.geo.mercator()
         .center([0, 0])
         .scale(width/6.2)
-        .translate([width / 2, height / 1.5]);
+        .translate([width / 2, height / 1.5]);    
 
     var g = mapsvg.append('g');
 
@@ -237,7 +237,7 @@ function initMap(geom){
         })
         .on('mouseout',  function(d,i) {
             maptip.classed('hidden', true)
-        });
+        }); 
 
     //create map legend
     var threshold = d3.scale.threshold()
@@ -325,7 +325,7 @@ function updateMap(data){
     var projection = d3.geo.mercator()
         .center([0, 0])
         .scale(width/6.2)
-        .translate([width / (2), height / (1.5)]);
+        .translate([width / (2), height / (1.5)]);    
 
     //create region labels
     var region = g.selectAll('text')
@@ -432,7 +432,7 @@ function zoomClick() {
 function selectedFilters(){
     //get selected filter data
     var filterArray = [];
-    for (var chart of dc.chartRegistry.list()){
+    for (var chart of dc.chartRegistry.list()){ 
         if (chart.filters().length>0) filterArray.push({chart: chart.anchor(), chartTag:$(chart.anchor()).attr('data-tag'), filters: chart.filters()});
     }
 
@@ -448,7 +448,7 @@ function selectedFilters(){
         else{
             $.each(filterArray[i].filters, function( j, val ){
               filters += (j==filterArray[i].filters.length-1) ? '<span>'+val+'</span>' : '<span>'+val+'</span>, ';
-            });
+            }); 
         }
         var strEnd = (i==filterArray.length-1) ? '' : ', ';
         if (filters!='') str += filterArray[i].chartTag+' '+filters + strEnd;
@@ -488,7 +488,7 @@ function autoAdvance(){
     timeChart.filter(null);
     timeChart.filter(dc.filters.RangedFilter(start, next));
     dc.redrawAll();
-}
+} 
 
 function resetAnimation(restart){
     $('#timeplay').html('Animate graph');
@@ -499,7 +499,7 @@ function resetAnimation(restart){
 
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
-var dataurl = 'http://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJsonMinified';//https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
+var dataurl = 'https://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJsonMinified';//https://proxy.hxlstandard.org/data.json?filter01=cut&cut-include-tags01=%23date%2Breported%2C%23affected%2Bregionincident%2C%23affected%2Bmissing%2C%23affected%2Bregionorigin%2C%23affected%2Bcause%2Bkilled%2C%23geo%2Blng%2C%23geo%2Blat&strip-headers=on&url=https%3A//docs.google.com/spreadsheets/d/1P8Tq9y2CLdst0APyzbiwnuKBpBGlkfvcSSaFYr2cQis/edit%23gid%3D175120509';
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');
@@ -539,8 +539,8 @@ $.when(
 ).then(function() {
     generateDashboard(hxlProxyToJSON(data));
     initMap(geom);
-
-    $('#modal').modal('hide');
+    
+    $('#modal').modal('hide'); 
 });
 
 //reload page on window orientation change to reset svg dimensions
@@ -600,8 +600,8 @@ $('#intro').click(function(){
               element: '#clearfilters',
                 intro: "Click here at anytime to reset the dashboard.",
                 position: 'right'
-              },
+              },                           
             ]
-        });
+        });  
     intro.start();
 });

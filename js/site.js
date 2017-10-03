@@ -499,7 +499,8 @@ function resetAnimation(restart){
 
 var colors = ['#ccc','#ffffb2','#fecc5c','#fd8d3c','#e31a1c'];
 var color = '#1f77b4';
-var dataurl = 'https://missingmigrants.iom.int/global-figures/2017/HDXjson';//https://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJsonMinified';
+var dataurl = 'data/HDX.json';
+//https://missingmigrants.iom.int/global-figures/2017/HDXjson';//https://dtmodk.iom.int/dtm_mpphxl/MMP_HXL.asmx/GetJsonMinified';
 var geomurl = 'data/worldmap.json';
 var regionsurl = 'data/regions.json';
 var formatDate = d3.time.format('%m/%d/%Y');
